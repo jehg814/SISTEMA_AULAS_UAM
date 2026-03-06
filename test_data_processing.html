@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Data Processing</title>
+</head>
+<body>
+    <h1>Test Data Processing</h1>
+    <button onclick="testLoad()">Test Load Data</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function testLoad() {
+            const output = document.getElementById('output');
+            try {
+                output.textContent = 'Loading...';
+
+                const ofertaResponse = await fetch('/api/oferta/P20252?sede=1');
+                const aulasResponse = await fetch('/api/aulas?sede=1');
+
+                const ofertaData = await ofertaResponse.json();
+                const aulasData = await aulasResponse.json();
+
+                output.textContent = `✅ Success!\n\n`;
+                output.textContent += `Oferta records: ${ofertaData.length}\n`;
+                output.textContent += `Aulas records: ${aulasData.length}\n\n`;
+
+                // Test data transformation
+                const transformedOferta = ofertaData.map(item => ({
+                    codigo: item.CodAsignatura,
+                    nombre: item.NombreAsignatura,
+                    seccion: item.Secc,
+                    sede: item.CodSede,
+                    nombreSede: item.NombreSede,
+                    cupo: item.Cupo,
+                    inscritos: item.Inscritos,
+                    profesor: item.Profesor,
+                    horario1: item.Horario1,
+                    horario2: item.Horario2,
+                    horario3: item.Horario3,
+                    horario4: item.Horario4,
+                    horario5: item.Horario5,
+                    horario6: item.Horario6,
+                    horario7: item.Horario7
+                }));
+
+                output.textContent += `Sample transformed record:\n`;
+                output.textContent += JSON.stringify(transformedOferta[0], null, 2);
+
+            } catch (error) {
+                output.textContent = '❌ Error: ' + error.message;
+                console.error('Full error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Variables de Entorno (Credenciales)
+.env
+
+# Dependencias
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server.log
+
+# Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos Temporales
+*.tmp
+*.temp
+
+# Archivos de Documentos (opcional - descomenta si no quieres subirlos)
+# *.docx
+# *.pdf
+
+# Archivos de Backup
+*.bak
+*.backup

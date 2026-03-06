@@ -1,0 +1,3352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asignación de Aulas - UAM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            color: white;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #764ba2;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(6, 1fr);
+            gap: 1px;
+            background: #dee2e6;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 800px;
+        }
+
+        .grid-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .grid-cell {
+            background: white;
+            padding: 10px;
+            min-height: 80px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .grid-cell:hover {
+            background: #f1f3f5;
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .occupied {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-left: 4px solid #667eea;
+        }
+
+        .available {
+            background: linear-gradient(135deg, #00b4db20 0%, #0083b020 100%);
+            border-left: 4px solid #00b4db;
+        }
+
+        .conflict {
+            background: linear-gradient(135deg, #e74c3c20 0%, #c0392b20 100%);
+            border-left: 4px solid #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .shared {
+            background: linear-gradient(135deg, #f2994a20 0%, #f2c94c20 100%);
+            border-left: 4px solid #f2994a;
+        }
+
+        .class-info {
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .class-code {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .class-name {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .class-section {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-top: 3px;
+        }
+
+        .class-students {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            color: #495057;
+            font-size: 1em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-description {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #495057;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 30px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #00b4db;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #f2994a;
+            color: white;
+        }
+
+        .badge-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .suggestion-card {
+            background: linear-gradient(135deg, #00b4db10 0%, #0083b010 100%);
+            border: 2px solid #00b4db;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .suggestion-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,180,219,0.3);
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .suggestion-score {
+            background: #00b4db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .suggestion-details {
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #e74c3c20 0%, #c0392b20 100%);
+            border-left: 4px solid #e74c3c;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #00b4db20 0%, #0083b020 100%);
+            border-left: 4px solid #00b4db;
+            color: #004085;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        /* Estilos para el chat de IA */
+        .ai-message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            max-width: 90%;
+        }
+
+        .ai-message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            text-align: right;
+        }
+
+        .ai-message.assistant {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .ai-message-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .ai-message-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .ai-loading {
+            display: inline-block;
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 12px;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .ai-loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .chip {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip:hover {
+            background: #dee2e6;
+            transform: scale(1.05);
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .schedule-grid {
+                grid-template-columns: 60px repeat(6, 120px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏫 Sistema de Asignación de Aulas - UAM</h1>
+            <p>Gestión inteligente y optimización de espacios académicos</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-grid">
+                <div class="control-group">
+                    <label for="periodo">Período Académico</label>
+                    <select id="periodo">
+                        <option value="20253">2025-3 (Intensivo Actual)</option>
+                        <option value="20252">2025-2</option>
+                        <option value="20251">2025-1</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="sede">Sede</label>
+                    <select id="sede">
+                        <option value="">Todas las Sedes</option>
+                        <option value="1">San Diego</option>
+                        <option value="2">Centro Histórico de Valencia</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="dia">Día de la Semana</label>
+                    <select id="dia">
+                        <option value="">Seleccione un día</option>
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="7">Domingo</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="bloque">Bloque Horario</label>
+                    <select id="bloque">
+                        <option value="">Seleccione un bloque</option>
+                        <option value="1-2">Bloques 1-2: 07:00AM - 08:30AM</option>
+                        <option value="3-4">Bloques 3-4: 08:45AM - 10:05AM</option>
+                        <option value="5-6">Bloques 5-6: 10:15AM - 11:45AM</option>
+                        <option value="7-8">Bloques 7-8: 11:50AM - 01:30PM</option>
+                        <option value="9-10">Bloques 9-10: 01:30PM - 03:05PM</option>
+                        <option value="11-12">Bloques 11-12: 03:05PM - 04:40PM</option>
+                        <option value="13-14">Bloques 13-14: 04:40PM - 06:15PM</option>
+                        <option value="15-16">Bloques 15-16: 06:15PM - 07:50PM</option>
+                        <option value="17-18">Bloques 17-18: 07:50PM - 09:25PM</option>
+                        <option value="1">Bloque 1: 07:00AM - 07:45AM</option>
+                        <option value="2">Bloque 2: 07:50AM - 08:30AM</option>
+                        <option value="3">Bloque 3: 08:45AM - 09:20AM</option>
+                        <option value="4">Bloque 4: 09:20AM - 10:05AM</option>
+                        <option value="5">Bloque 5: 10:15AM - 11:00AM</option>
+                        <option value="6">Bloque 6: 11:00AM - 11:45AM</option>
+                        <option value="7">Bloque 7: 11:50AM - 12:35PM</option>
+                        <option value="8">Bloque 8: 12:45PM - 01:30PM</option>
+                        <option value="9">Bloque 9: 01:30PM - 02:15PM</option>
+                        <option value="10">Bloque 10: 02:20PM - 03:05PM</option>
+                        <option value="11">Bloque 11: 03:05PM - 03:50PM</option>
+                        <option value="12">Bloque 12: 03:55PM - 04:40PM</option>
+                        <option value="13">Bloque 13: 04:40PM - 05:25PM</option>
+                        <option value="14">Bloque 14: 05:30PM - 06:15PM</option>
+                        <option value="15">Bloque 15: 06:15PM - 07:00PM</option>
+                        <option value="16">Bloque 16: 07:05PM - 07:50PM</option>
+                        <option value="17">Bloque 17: 07:50PM - 08:35PM</option>
+                        <option value="18">Bloque 18: 08:40PM - 09:25PM</option>
+                        <option value="19">Bloque 19: 09:25PM - 10:10PM</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="loadData()">
+                    🔍 Cargar Datos
+                </button>
+                <button class="btn btn-warning" onclick="detectConflicts()">
+                    ⚠️ Detectar Conflictos
+                </button>
+                <button class="btn btn-info" onclick="switchTab('optimization')">
+                    🔍 Búsqueda con IA
+                </button>
+                <button class="btn btn-danger" onclick="exportData()">
+                    📥 Exportar Asignaciones
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('visualization')">
+                    📅 Visualización de Horarios
+                </button>
+                <button class="tab" onclick="switchTab('buscador')">
+                    🔍 Buscador de Aulas
+                </button>
+                <button class="tab" onclick="switchTab('conflicts')">
+                    ⚡ Conflictos y Colisiones
+                </button>
+                <button class="tab" onclick="switchTab('sin-aula')">
+                    🚨 Secciones Sin Aula
+                </button>
+                <button class="tab" onclick="switchTab('statistics')">
+                    📈 Estadísticas de Uso
+                </button>
+                <button class="tab" onclick="switchTab('optimization')">
+                    🔍 Búsqueda con IA
+                </button>
+                <button class="tab" onclick="switchTab('management')">
+                    ⚙️ Gestión de Cambios
+                </button>
+            </div>
+
+            <div id="visualization" class="tab-content active">
+                <h2>📅 Visualización de Horarios por Aula</h2>
+
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p>Selecciona un aula para ver su horario semanal completo (Lunes a Viernes)</p>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 15px; align-items: end;">
+                        <div>
+                            <label for="vizSede" style="display: block; margin-bottom: 5px; font-weight: bold;">Sede:</label>
+                            <select id="vizSede" class="control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" onchange="filtrarAulasPorSedeYTipo()">
+                                <option value="">Todas las sedes</option>
+                                <option value="1">San Diego</option>
+                                <option value="2">Centro Valencia</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="vizTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
+                            <select id="vizTipoAula" class="control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" onchange="filtrarAulasPorSedeYTipo()">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="aulaSelector" style="display: block; margin-bottom: 5px; font-weight: bold;">Seleccionar Aula:</label>
+                            <select id="aulaSelector" class="control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">-- Seleccione un aula --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="mostrarHorarioAula()" style="padding: 10px 30px; font-size: 14px;">
+                                Ver Horario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scheduleContainer" style="display: none;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3 id="aulaTitle" style="margin-bottom: 20px; color: #2c3e50;"></h3>
+
+                        <div style="overflow-x: auto;">
+                            <table id="horarioGrid" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #34495e; color: white;">
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Bloque</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Horario</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Lunes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Martes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Miércoles</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jueves</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Viernes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="horarioBody">
+                                    <!-- Schedule grid will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="availability" class="tab-content">
+                <h2>🏢 Disponibilidad de Aulas por Sede</h2>
+                <div class="info-box">
+                    <p>📍 Selecciona la sede, día y horario para ver las aulas disponibles</p>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label for="availSede" style="display: block; margin-bottom: 5px; font-weight: bold;">Sede:</label>
+                            <select id="availSede" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="1" selected>San Diego</option>
+                                <option value="2">Centro Valencia</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="availDia" style="display: block; margin-bottom: 5px; font-weight: bold;">Día de la Semana:</label>
+                            <select id="availDia" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Seleccione un día --</option>
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Miércoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="availBloqueInicio" style="display: block; margin-bottom: 5px; font-weight: bold;">Bloque Inicial:</label>
+                            <select id="availBloqueInicio" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Bloque --</option>
+                                <option value="1">1 (7:00-7:50)</option>
+                                <option value="2">2 (7:50-8:40)</option>
+                                <option value="3">3 (8:40-9:30)</option>
+                                <option value="4">4 (9:30-10:20)</option>
+                                <option value="5">5 (10:15-11:05)</option>
+                                <option value="6">6 (11:05-11:55)</option>
+                                <option value="7">7 (11:55-12:45)</option>
+                                <option value="8">8 (12:45-1:35)</option>
+                                <option value="9">9 (1:30-2:20)</option>
+                                <option value="10">10 (2:20-3:10)</option>
+                                <option value="11">11 (3:10-4:00)</option>
+                                <option value="12">12 (4:00-4:50)</option>
+                                <option value="13">13 (4:45-5:35)</option>
+                                <option value="14">14 (5:35-6:25)</option>
+                                <option value="15">15 (6:25-7:15)</option>
+                                <option value="16">16 (7:15-8:05)</option>
+                                <option value="17">17 (8:00-8:50)</option>
+                                <option value="18">18 (8:50-9:40)</option>
+                                <option value="19">19 (9:40-10:30)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="availBloqueFin" style="display: block; margin-bottom: 5px; font-weight: bold;">Bloque Final:</label>
+                            <select id="availBloqueFin" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Bloque --</option>
+                                <option value="1">1 (7:00-7:50)</option>
+                                <option value="2">2 (7:50-8:40)</option>
+                                <option value="3">3 (8:40-9:30)</option>
+                                <option value="4">4 (9:30-10:20)</option>
+                                <option value="5">5 (10:15-11:05)</option>
+                                <option value="6">6 (11:05-11:55)</option>
+                                <option value="7">7 (11:55-12:45)</option>
+                                <option value="8">8 (12:45-1:35)</option>
+                                <option value="9">9 (1:30-2:20)</option>
+                                <option value="10">10 (2:20-3:10)</option>
+                                <option value="11">11 (3:10-4:00)</option>
+                                <option value="12">12 (4:00-4:50)</option>
+                                <option value="13">13 (4:45-5:35)</option>
+                                <option value="14">14 (5:35-6:25)</option>
+                                <option value="15">15 (6:25-7:15)</option>
+                                <option value="16">16 (7:15-8:05)</option>
+                                <option value="17">17 (8:00-8:50)</option>
+                                <option value="18">18 (8:50-9:40)</option>
+                                <option value="19">19 (9:40-10:30)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="availTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
+                            <select id="availTipoAula" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="Salon">Salon</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button class="btn btn-primary" onclick="analyzeAvailability()" style="padding: 10px 30px; font-size: 16px;">
+                            🔍 Buscar Aulas Disponibles
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="availabilityTable">
+                        <thead>
+                            <tr>
+                                <th>Aula</th>
+                                <th>Capacidad</th>
+                                <th>Edificio</th>
+                                <th>Sede</th>
+                                <th>Bloques Disponibles</th>
+                                <th>% Ocupación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="availabilityBody">
+                            <!-- Data will be populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="buscador" class="tab-content">
+                <h2>🔍 Buscador de Aulas</h2>
+                <div class="info-box">
+                    <p>Encuentra aulas disponibles según tus requisitos de horario y capacidad</p>
+                </div>
+
+                <div class="search-filters" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label for="searchSede" style="display: block; margin-bottom: 5px; font-weight: bold;">Sede:</label>
+                            <select id="searchSede" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="1" selected>San Diego</option>
+                                <option value="2">Centro Valencia</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="searchDia" style="display: block; margin-bottom: 5px; font-weight: bold;">Día de la Semana:</label>
+                            <select id="searchDia" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Miércoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                                <option value="6">Sábado</option>
+                                <option value="7">Domingo</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="searchBloqueInicio" style="display: block; margin-bottom: 5px; font-weight: bold;">Bloque Inicial:</label>
+                            <select id="searchBloqueInicio" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="1">1 (7:00-7:50)</option>
+                                <option value="2">2 (7:50-8:40)</option>
+                                <option value="3">3 (8:40-9:30)</option>
+                                <option value="4">4 (9:30-10:20)</option>
+                                <option value="5">5 (10:15-11:05)</option>
+                                <option value="6">6 (11:05-11:55)</option>
+                                <option value="7">7 (11:55-12:45)</option>
+                                <option value="8">8 (12:45-1:35)</option>
+                                <option value="9">9 (1:30-2:20)</option>
+                                <option value="10">10 (2:20-3:10)</option>
+                                <option value="11">11 (3:10-4:00)</option>
+                                <option value="12">12 (4:00-4:50)</option>
+                                <option value="13">13 (4:45-5:35)</option>
+                                <option value="14">14 (5:35-6:25)</option>
+                                <option value="15">15 (6:25-7:15)</option>
+                                <option value="16">16 (7:15-8:05)</option>
+                                <option value="17">17 (8:00-8:50)</option>
+                                <option value="18">18 (8:50-9:40)</option>
+                                <option value="19">19 (9:40-10:30)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="searchBloqueFin" style="display: block; margin-bottom: 5px; font-weight: bold;">Bloque Final:</label>
+                            <select id="searchBloqueFin" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="1">1 (7:00-7:50)</option>
+                                <option value="2">2 (7:50-8:40)</option>
+                                <option value="3">3 (8:40-9:30)</option>
+                                <option value="4">4 (9:30-10:20)</option>
+                                <option value="5">5 (10:15-11:05)</option>
+                                <option value="6">6 (11:05-11:55)</option>
+                                <option value="7">7 (11:55-12:45)</option>
+                                <option value="8">8 (12:45-1:35)</option>
+                                <option value="9">9 (1:30-2:20)</option>
+                                <option value="10">10 (2:20-3:10)</option>
+                                <option value="11">11 (3:10-4:00)</option>
+                                <option value="12">12 (4:00-4:50)</option>
+                                <option value="13">13 (4:45-5:35)</option>
+                                <option value="14">14 (5:35-6:25)</option>
+                                <option value="15">15 (6:25-7:15)</option>
+                                <option value="16">16 (7:15-8:05)</option>
+                                <option value="17">17 (8:00-8:50)</option>
+                                <option value="18">18 (8:50-9:40)</option>
+                                <option value="19">19 (9:40-10:30)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="searchCapacidad" style="display: block; margin-bottom: 5px; font-weight: bold;">Capacidad Mínima:</label>
+                            <input type="number" id="searchCapacidad" class="control" min="1" value="30" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+
+                        <div>
+                            <label for="searchTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
+                            <select id="searchTipoAula" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="Salon">Salon</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button class="btn btn-primary" onclick="buscarAulas()" style="padding: 10px 30px; font-size: 16px;">
+                            🔍 Buscar Aulas
+                        </button>
+                    </div>
+                </div>
+
+                <div id="searchResults" style="display: none;">
+                    <h3 style="margin-bottom: 15px;">Resultados de la Búsqueda</h3>
+                    <div class="info-box" id="searchInfo" style="margin-bottom: 15px;">
+                        <p id="searchSummary"></p>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="searchResultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Aula</th>
+                                    <th>Capacidad</th>
+                                    <th>Edificio</th>
+                                    <th>Sede</th>
+                                    <th>Ver Horario</th>
+                                </tr>
+                            </thead>
+                            <tbody id="searchResultsBody">
+                                <!-- Results will be populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="searchScheduleContainer" style="display: none; margin-top: 30px;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3 id="searchAulaTitle" style="margin-bottom: 20px; color: #2c3e50;"></h3>
+
+                        <div style="overflow-x: auto;">
+                            <table id="searchHorarioGrid" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #34495e; color: white;">
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Bloque</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Horario</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Lunes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Martes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Miércoles</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jueves</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Viernes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="searchHorarioBody">
+                                    <!-- Schedule grid will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="conflicts" class="tab-content">
+                <h2>Detección de Conflictos</h2>
+                <div id="conflictsList">
+                    <!-- Conflicts will be listed here -->
+                </div>
+            </div>
+
+            <div id="sin-aula" class="tab-content">
+                <h2>🚨 Secciones Sin Aula Asignada</h2>
+
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p>Este reporte muestra todas las secciones con estudiantes inscritos que tienen bloques horarios asignados pero <strong>no tienen aula asignada</strong>.</p>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <button onclick="detectarSeccionesSinAula()" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">
+                        🔍 Buscar Secciones Sin Aula
+                    </button>
+                </div>
+
+                <div id="sinAulaResults">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+
+            <div id="statistics" class="tab-content">
+                <h2>📊 Estadísticas de Disponibilidad de Aulas</h2>
+
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p>Visualiza la disponibilidad de aulas por bloque horario. Cada celda muestra: <strong>Aulas Disponibles</strong> / <strong>Capacidad Disponible</strong> / <strong>% Ocupación</strong></p>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+                        <div>
+                            <label for="statsSede" style="display: block; margin-bottom: 5px; font-weight: bold;">Seleccionar Sede:</label>
+                            <select id="statsSede" class="control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">-- Seleccione una sede --</option>
+                                <option value="1">San Diego</option>
+                                <option value="2">Centro Valencia</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="statsTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
+                            <select id="statsTipoAula" class="control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="generarEstadisticas()" style="padding: 10px 30px; font-size: 14px;">
+                                📊 Generar Estadísticas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statsContainer" style="display: none;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3 id="statsTitle" style="margin-bottom: 20px; color: #2c3e50;"></h3>
+
+                        <div style="overflow-x: auto;">
+                            <table id="statsGrid" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #34495e; color: white;">
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Bloque</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Horario</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Lunes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Martes</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Miércoles</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jueves</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Viernes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statsBody">
+                                    <!-- Statistics grid will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px;">
+                            <h4 style="margin-bottom: 10px;">📈 Resumen General</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div>
+                                    <strong>Total de Aulas:</strong> <span id="statsTotalAulas">0</span>
+                                </div>
+                                <div>
+                                    <strong>Capacidad Total:</strong> <span id="statsCapacidadTotal">0</span> estudiantes
+                                </div>
+                                <div>
+                                    <strong>Secciones Activas:</strong> <span id="statsSeccionesActivas">0</span>
+                                </div>
+                                <div>
+                                    <strong>Sede:</strong> <span id="statsSedeNombre">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="optimization" class="tab-content">
+                <h2>Búsqueda de Aulas con IA</h2>
+                <div class="info-box">
+                    <p>🤖 Claude Sonnet 4.5 te ayudará a encontrar aulas específicas para tus necesidades, considerando:</p>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>Aulas disponibles que cumplan tus requisitos</li>
+                        <li>Opciones de reasignación (si es necesario mover alguna sección)</li>
+                        <li>Propuestas inteligentes basadas en capacidad y disponibilidad</li>
+                        <li>Solo respuestas relevantes a tu consulta específica</li>
+                    </ul>
+                </div>
+
+                <!-- Formulario inicial -->
+                <div id="aiFormulario" style="margin-top: 30px;">
+                    <h3>¿Qué aula necesitas buscar?</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>
+                            <label for="aiSede" style="display: block; margin-bottom: 5px; font-weight: bold;">Sede:</label>
+                            <select id="aiSede" class="control" style="width: 100%; padding: 8px;">
+                                <option value="1">San Diego</option>
+                                <option value="2">Centro Histórico de Valencia</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="aiTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
+                            <select id="aiTipoAula" class="control" style="width: 100%; padding: 8px;">
+                                <option value="">Cualquier tipo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="aiCapacidad" style="display: block; margin-bottom: 5px; font-weight: bold;">Capacidad Mínima:</label>
+                            <input type="number" id="aiCapacidad" class="control" placeholder="Ej: 30" style="width: 100%; padding: 8px;">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label for="aiDiasBloques" style="display: block; margin-bottom: 5px; font-weight: bold;">Días y Bloques:</label>
+                            <input type="text" id="aiDiasBloques" class="control" placeholder="Ej: Lunes:1-4, Martes:2-6, Jueves:5-7" style="width: 100%; padding: 8px;">
+                            <small style="color: #666; font-size: 0.85em;">Formato: Día:BloqueInicio-BloqueFin separados por comas</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="iniciarBusquedaIA()" style="margin-top: 20px; padding: 12px 30px; font-size: 16px;">
+                        🔍 Buscar con IA
+                    </button>
+                </div>
+
+                <!-- Chat con la IA -->
+                <div id="aiChatContainer" style="margin-top: 30px; display: none;">
+                    <h3>Conversación con Claude</h3>
+                    <div id="aiChatMessages" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; max-height: 500px; overflow-y: auto; margin-top: 15px;">
+                        <!-- Los mensajes aparecerán aquí -->
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <input type="text" id="aiChatInput" class="control" placeholder="Escribe tu pregunta o solicitud..." style="flex: 1; padding: 12px;" onkeypress="if(event.key==='Enter') enviarMensajeIA()">
+                        <button class="btn btn-primary" onclick="enviarMensajeIA()" style="padding: 12px 25px;">
+                            Enviar
+                        </button>
+                        <button class="btn btn-secondary" onclick="reiniciarChat()" style="padding: 12px 25px;">
+                            Nueva Consulta
+                        </button>
+                    </div>
+                </div>
+
+                <div id="aiResultados" style="margin-top: 30px;">
+                    <!-- Resultados de búsqueda aparecerán aquí -->
+                </div>
+            </div>
+
+            <div id="management" class="tab-content">
+                <h2>Gestión de Cambios</h2>
+                <div class="info-box">
+                    <p>✏️ Realiza cambios temporales en la asignación. Los cambios se guardan localmente hasta que los apliques en la base de datos.</p>
+                </div>
+                <div id="pendingChanges">
+                    <h3>Cambios Pendientes</h3>
+                    <div id="changesList">
+                        <!-- Pending changes will be listed here -->
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="saveChanges()" style="margin-top: 20px;">
+                    💾 Guardar Cambios Localmente
+                </button>
+                <button class="btn btn-primary" onclick="exportChanges()" style="margin-left: 10px;">
+                    📤 Exportar para BD
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for details -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+                <h2 id="modalTitle">Detalles</h2>
+            </div>
+            <div id="modalBody">
+                <!-- Modal content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global data storage
+        let currentData = {
+            oferta: [],
+            aulas: [],
+            conflicts: [],
+            suggestions: [],
+            pendingChanges: []
+        };
+
+        // Materias equivalentes (loaded from server)
+        let materiasEquivalentesMap = new Map();
+
+        // Function to check if two subjects are equivalent
+        function sonMateriasEquivalentes(materia1, materia2) {
+            if (!materia1 || !materia2) return false;
+            if (materia1 === materia2) return true;
+
+            const equiv1 = materiasEquivalentesMap.get(materia1);
+            if (equiv1 && equiv1.has(materia2)) return true;
+
+            const equiv2 = materiasEquivalentesMap.get(materia2);
+            if (equiv2 && equiv2.has(materia1)) return true;
+
+            return false;
+        }
+
+        // Load equivalent subjects from server
+        async function cargarMateriasEquivalentes() {
+            try {
+                const response = await fetch('/api/equivalencias');
+                if (response.ok) {
+                    const data = await response.json();
+                    materiasEquivalentesMap.clear();
+
+                    data.equivalencias.forEach(equiv => {
+                        if (!materiasEquivalentesMap.has(equiv.materia1)) {
+                            materiasEquivalentesMap.set(equiv.materia1, new Set());
+                        }
+                        if (!materiasEquivalentesMap.has(equiv.materia2)) {
+                            materiasEquivalentesMap.set(equiv.materia2, new Set());
+                        }
+                        materiasEquivalentesMap.get(equiv.materia1).add(equiv.materia2);
+                        materiasEquivalentesMap.get(equiv.materia2).add(equiv.materia1);
+                    });
+
+                    console.log(`Loaded ${data.equivalencias.length} equivalent subject pairs`);
+                }
+            } catch (error) {
+                console.error('Error loading equivalent subjects:', error);
+            }
+        }
+
+        // Load tipos de aula from server and populate selectors
+        async function cargarTiposAula() {
+            try {
+                const response = await fetch('/api/tipos-aula');
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Populate searchTipoAula selector
+                    const searchTipoSelect = document.getElementById('searchTipoAula');
+                    if (searchTipoSelect) {
+                        searchTipoSelect.innerHTML = '';
+                        data.tipos.forEach(tipo => {
+                            const option = document.createElement('option');
+                            option.value = tipo;
+                            option.textContent = tipo;
+                            if (tipo === 'Salon') {
+                                option.selected = true;
+                            }
+                            searchTipoSelect.appendChild(option);
+                        });
+                    }
+
+                    // Populate availTipoAula selector
+                    const availTipoSelect = document.getElementById('availTipoAula');
+                    if (availTipoSelect) {
+                        availTipoSelect.innerHTML = '';
+                        data.tipos.forEach(tipo => {
+                            const option = document.createElement('option');
+                            option.value = tipo;
+                            option.textContent = tipo;
+                            if (tipo === 'Salon') {
+                                option.selected = true;
+                            }
+                            availTipoSelect.appendChild(option);
+                        });
+                    }
+
+                    // Populate aiTipoAula selector
+                    const aiTipoSelect = document.getElementById('aiTipoAula');
+                    console.log('🔍 aiTipoAula element:', aiTipoSelect);
+                    console.log('📦 Tipos de aula recibidos:', data.tipos);
+                    if (aiTipoSelect) {
+                        aiTipoSelect.innerHTML = '<option value="">Cualquier tipo</option>';
+                        data.tipos.forEach(tipo => {
+                            const option = document.createElement('option');
+                            option.value = tipo;
+                            option.textContent = tipo;
+                            aiTipoSelect.appendChild(option);
+                        });
+                        console.log('✅ aiTipoAula poblado con', data.tipos.length, 'tipos');
+                    } else {
+                        console.error('❌ No se encontró el elemento aiTipoAula');
+                    }
+
+                    // Populate statsTipoAula selector
+                    const statsTipoSelect = document.getElementById('statsTipoAula');
+                    if (statsTipoSelect) {
+                        statsTipoSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                        data.tipos.forEach(tipo => {
+                            const option = document.createElement('option');
+                            option.value = tipo;
+                            option.textContent = tipo;
+                            statsTipoSelect.appendChild(option);
+                        });
+                    }
+
+                    // Populate vizTipoAula selector
+                    const vizTipoSelect = document.getElementById('vizTipoAula');
+                    if (vizTipoSelect) {
+                        vizTipoSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                        data.tipos.forEach(tipo => {
+                            const option = document.createElement('option');
+                            option.value = tipo;
+                            option.textContent = tipo;
+                            vizTipoSelect.appendChild(option);
+                        });
+                    }
+
+                    console.log(`Loaded ${data.tipos.length} tipos de aula`);
+                }
+            } catch (error) {
+                console.error('Error loading tipos de aula:', error);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            console.log('Sistema de Asignación de Aulas iniciado');
+            cargarMateriasEquivalentes();
+            cargarTiposAula();
+            loadInitialData();
+        }
+
+        function loadInitialData() {
+            // This would normally load from the database
+            // For now, we'll show a loading message
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showMessage('info', 'Sistema listo. Presione "Cargar Datos" para comenzar.');
+            }, 1000);
+        }
+
+        function showLoading() {
+            const content = document.querySelector('.content');
+            const loadingHtml = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando datos...</p>
+                </div>
+            `;
+            content.insertAdjacentHTML('afterbegin', loadingHtml);
+        }
+
+        function hideLoading() {
+            const loading = document.querySelector('.loading');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function showMessage(type, message) {
+            const messageClass = type === 'error' ? 'error-message' : 
+                               type === 'success' ? 'success-message' : 
+                               'info-box';
+            const content = document.querySelector('.content');
+            const messageHtml = `
+                <div class="${messageClass}" id="tempMessage">
+                    ${message}
+                </div>
+            `;
+            content.insertAdjacentHTML('afterbegin', messageHtml);
+            setTimeout(() => {
+                const tempMessage = document.getElementById('tempMessage');
+                if (tempMessage) {
+                    tempMessage.remove();
+                }
+            }, 5000);
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        async function loadData() {
+            showLoading();
+
+            // Get filter values
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('sede').value;
+
+            if (!periodo) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione un periodo');
+                return;
+            }
+
+            try {
+                // Build API URL with query parameters
+                let ofertaUrl = `/api/oferta/${periodo}`;
+                let aulasUrl = `/api/aulas`;
+
+                if (sede) {
+                    ofertaUrl += `?sede=${sede}`;
+                    aulasUrl += `?sede=${sede}`;
+                }
+
+                // Fetch real data from database
+                const [ofertaResponse, aulasResponse] = await Promise.all([
+                    fetch(ofertaUrl),
+                    fetch(aulasUrl)
+                ]);
+
+                if (!ofertaResponse.ok || !aulasResponse.ok) {
+                    throw new Error('Error al cargar datos del servidor');
+                }
+
+                const ofertaData = await ofertaResponse.json();
+                const aulasData = await aulasResponse.json();
+
+                // Transform data to match expected format
+                currentData.oferta = ofertaData.map(item => ({
+                    codigo: item.CodAsignatura,
+                    nombre: item.NombreAsignatura,
+                    seccion: item.Secc,
+                    sede: item.CodSede,
+                    nombreSede: item.NombreSede,
+                    cupo: item.Cupo,
+                    inscritos: item.Inscritos,
+                    profesor: item.Profesor,
+                    horario1: item.Horario1,
+                    horario2: item.Horario2,
+                    horario3: item.Horario3,
+                    horario4: item.Horario4,
+                    horario5: item.Horario5,
+                    horario6: item.Horario6,
+                    horario7: item.Horario7
+                }));
+
+                currentData.aulas = aulasData.map(item => ({
+                    codigo: item.CodAula,
+                    nombre: item.NombreAula,
+                    capacidad: item.Capacidad,
+                    edificio: item.CodEdificio,
+                    sede: item.CodSede,
+                    nombreSede: item.NombreSede,
+                    tipo: item.Tipo
+                }));
+
+                // Populate classroom selector
+                populateAulaSelector();
+                // populateScheduleGrid(); // No longer needed with new visualization
+                updateStatistics();
+                hideLoading();
+                showMessage('success', `Datos cargados: ${currentData.oferta.length} secciones, ${currentData.aulas.length} aulas`);
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                hideLoading();
+                showMessage('error', 'Error al cargar datos: ' + error.message);
+            }
+        }
+
+        async function analyzeAvailability() {
+            showLoading();
+
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('availSede').value;
+            const dia = document.getElementById('availDia').value;
+            const bloqueInicio = Number(document.getElementById('availBloqueInicio').value);
+            const bloqueFin = Number(document.getElementById('availBloqueFin').value);
+            const tipoAula = document.getElementById('availTipoAula').value;
+
+            // Validaciones
+            if (!periodo) {
+                hideLoading();
+                showMessage('error', 'Por favor cargue los datos primero (seleccione periodo en el control superior)');
+                return;
+            }
+
+            if (!sede) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione una sede');
+                return;
+            }
+
+            if (!dia) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione un día de la semana');
+                return;
+            }
+
+            if (!bloqueInicio || !bloqueFin) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione los bloques inicial y final');
+                return;
+            }
+
+            if (bloqueInicio > bloqueFin) {
+                hideLoading();
+                showMessage('error', 'El bloque inicial no puede ser mayor que el bloque final');
+                return;
+            }
+
+            try {
+
+                // Llamar al endpoint del servidor
+                const response = await fetch('/api/aulas/disponibles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        periodo: periodo,
+                        sede: sede,
+                        dia: Number(dia),
+                        bloqueInicio: bloqueInicio,
+                        bloqueFin: bloqueFin,
+                        tipoAula: tipoAula
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al consultar aulas disponibles');
+                }
+
+                const availableRooms = await response.json();
+
+                // Agregar información de ocupación calculada
+                const roomsWithOccupancy = availableRooms.map(room => ({
+                    ...room,
+                    occupancyRate: 0,  // Está disponible, no ocupada
+                    availableSlots: 'Disponible en este horario'
+                }));
+
+                displayAvailabilityResults(roomsWithOccupancy);
+                hideLoading();
+
+                const dayNames = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                const sedeNames = { '1': 'San Diego', '2': 'Centro Valencia' };
+                showMessage('success',
+                    `Encontradas ${availableRooms.length} aulas disponibles en ${sedeNames[sede]} para ${dayNames[dia]} bloques ${bloqueInicio}-${bloqueFin}`);
+
+            } catch (error) {
+                console.error('Error analizando disponibilidad:', error);
+                hideLoading();
+                showMessage('error', 'Error al analizar disponibilidad: ' + error.message);
+            }
+        }
+
+        async function buscarAulas() {
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('searchSede').value;
+            const dia = document.getElementById('searchDia').value;
+            const bloqueInicio = Number(document.getElementById('searchBloqueInicio').value);
+            const bloqueFin = Number(document.getElementById('searchBloqueFin').value);
+            const capacidadMinima = Number(document.getElementById('searchCapacidad').value);
+            const tipoAula = document.getElementById('searchTipoAula').value;
+
+            // Validaciones
+            if (!periodo) {
+                showMessage('error', 'Por favor seleccione un periodo en el control superior');
+                return;
+            }
+
+            if (!sede) {
+                showMessage('error', 'Por favor seleccione una sede');
+                return;
+            }
+
+            if (bloqueInicio > bloqueFin) {
+                showMessage('error', 'El bloque inicial no puede ser mayor que el bloque final');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/aulas/disponibles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        periodo: periodo,
+                        sede: sede,
+                        dia: Number(dia),
+                        bloqueInicio: bloqueInicio,
+                        bloqueFin: bloqueFin,
+                        capacidadMinima: capacidadMinima,
+                        tipoAula: tipoAula
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al buscar aulas disponibles');
+                }
+
+                const availableRooms = await response.json();
+
+                // Mostrar resultados
+                const resultsDiv = document.getElementById('searchResults');
+                const resultsBody = document.getElementById('searchResultsBody');
+                const searchSummary = document.getElementById('searchSummary');
+
+                const dayNames = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                const sedeNames = { '1': 'San Diego', '2': 'Centro Valencia' };
+
+                searchSummary.textContent = `Se encontraron ${availableRooms.length} aula(s) disponible(s) para ${dayNames[dia]}, bloques ${bloqueInicio}-${bloqueFin}${capacidadMinima > 0 ? ` con capacidad mínima de ${capacidadMinima} estudiantes` : ''}`;
+
+                if (availableRooms.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron aulas disponibles con estos criterios</td></tr>';
+                } else {
+                    let html = '';
+                    availableRooms.forEach(room => {
+                        html += `
+                            <tr>
+                                <td><strong>${room.CodAula}</strong></td>
+                                <td>${room.Capacidad || 'N/A'}</td>
+                                <td>${room.CodEdificio || 'N/A'}</td>
+                                <td>${sedeNames[sede] || sede}</td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="verHorarioDesdeResultados('${room.CodAula}')" style="padding: 5px 15px; font-size: 12px;">
+                                        📅 Ver Horario
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    resultsBody.innerHTML = html;
+                }
+
+                resultsDiv.style.display = 'block';
+                hideLoading();
+
+                showMessage('success', `Búsqueda completada: ${availableRooms.length} aula(s) encontrada(s)`);
+
+            } catch (error) {
+                console.error('Error buscando aulas:', error);
+                hideLoading();
+                showMessage('error', 'Error al buscar aulas: ' + error.message);
+            }
+        }
+
+        function populateAulaSelector() {
+            filtrarAulasPorSedeYTipo();
+        }
+
+        function filtrarAulasPorSedeYTipo() {
+            const aulaSelector = document.getElementById('aulaSelector');
+            const sedeFilter = document.getElementById('vizSede').value;
+            const tipoFilter = document.getElementById('vizTipoAula').value;
+
+            aulaSelector.innerHTML = '<option value="">-- Seleccione un aula --</option>';
+
+            // Filter and sort classrooms
+            const filteredAulas = currentData.aulas.filter(aula => {
+                // Filter by sede
+                if (sedeFilter && aula.sede !== sedeFilter) return false;
+                // Filter by tipo
+                if (tipoFilter && aula.tipo !== tipoFilter) return false;
+                return true;
+            });
+
+            // Sort by code
+            const sortedAulas = filteredAulas.sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+            sortedAulas.forEach(aula => {
+                const option = document.createElement('option');
+                option.value = aula.codigo;
+                option.textContent = `${aula.codigo} - ${aula.nombre || ''} (Capacidad: ${aula.capacidad || 'N/A'})`;
+                aulaSelector.appendChild(option);
+            });
+
+            // Update info message
+            const sedeNames = { '1': 'San Diego', '2': 'Centro Valencia' };
+            let filterInfo = '';
+            if (sedeFilter || tipoFilter) {
+                filterInfo = 'Filtros aplicados: ';
+                const filters = [];
+                if (sedeFilter) filters.push(sedeNames[sedeFilter]);
+                if (tipoFilter) filters.push(`Tipo: ${tipoFilter}`);
+                filterInfo += filters.join(', ');
+                console.log(`${filterInfo} - ${sortedAulas.length} aula(s) encontrada(s)`);
+            }
+        }
+
+        function mostrarHorarioAula() {
+            const aulaCode = document.getElementById('aulaSelector').value;
+
+            if (!aulaCode) {
+                showMessage('error', 'Por favor seleccione un aula');
+                return;
+            }
+
+            if (currentData.oferta.length === 0) {
+                showMessage('error', 'Por favor cargue los datos primero');
+                return;
+            }
+
+            // Find classroom info
+            const aula = currentData.aulas.find(a => a.codigo === aulaCode);
+            if (!aula) {
+                showMessage('error', 'Aula no encontrada');
+                return;
+            }
+
+            // Update title
+            const aulaTitle = document.getElementById('aulaTitle');
+            aulaTitle.textContent = `Horario del Aula: ${aula.codigo} - ${aula.nombre || ''} (Capacidad: ${aula.capacidad || 'N/A'})`;
+
+            // Block times definition
+            const blockTimes = [
+                '7:00-7:50', '7:50-8:40', '8:40-9:30', '9:30-10:20',
+                '10:15-11:05', '11:05-11:55', '11:55-12:45', '12:45-1:35',
+                '1:30-2:20', '2:20-3:10', '3:10-4:00', '4:00-4:50',
+                '4:45-5:35', '5:35-6:25', '6:25-7:15', '7:15-8:05',
+                '8:00-8:50', '8:50-9:40', '9:40-10:30'
+            ];
+
+            // Create schedule grid for Monday to Friday (days 1-5)
+            const schedule = {};
+            for (let block = 1; block <= 19; block++) {
+                schedule[block] = { 1: null, 2: null, 3: null, 4: null, 5: null };
+            }
+
+            // Find all sections using this classroom - ONLY WITH STUDENTS
+            currentData.oferta.forEach(section => {
+                // SKIP sections with 0 enrolled students (not in operation)
+                if (!section.inscritos || section.inscritos === 0) {
+                    return;
+                }
+
+                // Check each day (Monday to Friday only: 1-5)
+                for (let dia = 1; dia <= 5; dia++) {
+                    const horarioField = `horario${dia}`;
+                    const horario = section[horarioField];
+
+                    if (horario) {
+                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2"
+                        const slots = horario.split(',');
+                        slots.forEach(slot => {
+                            if (slot.includes(':')) {
+                                const [bloques, aula_slot] = slot.split(':');
+
+                                if (aula_slot.trim() === aulaCode) {
+                                    // Parse blocks
+                                    let startBlock, endBlock;
+                                    if (bloques.includes('-')) {
+                                        [startBlock, endBlock] = bloques.split('-').map(Number);
+                                    } else {
+                                        startBlock = endBlock = Number(bloques);
+                                    }
+
+                                    // Fill schedule for all blocks in range
+                                    for (let block = startBlock; block <= endBlock; block++) {
+                                        if (schedule[block]) {
+                                            const existingCell = schedule[block][dia];
+
+                                            // Check if there's already a section in this slot
+                                            if (existingCell) {
+                                                // Get the base codes (remove "+ XXX" if already combined)
+                                                const existingCodigo = existingCell.codigo.split(' + ')[0];
+                                                const newCodigo = section.codigo;
+
+                                                // Check if they are equivalent subjects
+                                                const areEquivalent = sonMateriasEquivalentes(existingCodigo, newCodigo);
+
+                                                schedule[block][dia] = {
+                                                    codigo: `${existingCell.codigo} + ${section.codigo}`,
+                                                    nombre: existingCell.nombre.length > section.nombre.length ? existingCell.nombre : section.nombre,
+                                                    seccion: `${existingCell.seccion} + ${section.seccion}`,
+                                                    profesor: existingCell.profesor === section.profesor ? existingCell.profesor : `${existingCell.profesor} / ${section.profesor}`,
+                                                    inscritos: existingCell.inscritos + section.inscritos, // SUM STUDENTS
+                                                    cupo: existingCell.cupo + section.cupo,
+                                                    bloques: `${startBlock}-${endBlock}`,
+                                                    isEquivalent: areEquivalent,
+                                                    isCollision: !areEquivalent // TRUE if NOT equivalent
+                                                };
+                                            } else {
+                                                schedule[block][dia] = {
+                                                    codigo: section.codigo,
+                                                    nombre: section.nombre,
+                                                    seccion: section.seccion,
+                                                    profesor: section.profesor,
+                                                    inscritos: section.inscritos,
+                                                    cupo: section.cupo,
+                                                    bloques: `${startBlock}-${endBlock}`,
+                                                    isCollision: false
+                                                };
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Build HTML table
+            const horarioBody = document.getElementById('horarioBody');
+            let html = '';
+
+            for (let block = 1; block <= 19; block++) {
+                html += `<tr>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; font-weight: bold; background: #ecf0f1;">${block}</td>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #ecf0f1; font-size: 12px;">${blockTimes[block - 1]}</td>`;
+
+                // Days 1-5 (Monday to Friday)
+                for (let dia = 1; dia <= 5; dia++) {
+                    const cell = schedule[block][dia];
+
+                    if (cell) {
+                        // Determine background color: RED for collision, BLUE for normal/equivalent
+                        const bgColor = cell.isCollision ? '#e74c3c' : '#3498db';
+                        const warningIcon = cell.isCollision ? '⚠️ ' : '';
+
+                        html += `
+                            <td style="padding: 8px; border: 1px solid #ddd; background: ${bgColor}; color: white; font-size: 12px;">
+                                <div style="font-weight: bold; margin-bottom: 4px;">${warningIcon}${cell.codigo}</div>
+                                <div style="font-size: 11px; margin-bottom: 2px;">${cell.nombre}</div>
+                                <div style="font-size: 10px; opacity: 0.9;">Sección: ${cell.seccion}</div>
+                                <div style="font-size: 10px; opacity: 0.9;">Inscritos: ${cell.inscritos}/${cell.cupo}</div>
+                                ${cell.profesor ? `<div style="font-size: 10px; opacity: 0.9; margin-top: 2px;">${cell.profesor}</div>` : ''}
+                                ${cell.isCollision ? `<div style="font-size: 10px; font-weight: bold; margin-top: 4px;">¡COLISIÓN!</div>` : ''}
+                            </td>
+                        `;
+                    } else {
+                        html += `<td style="padding: 8px; border: 1px solid #ddd; background: #ecf0f1; text-align: center; color: #95a5a6; font-size: 11px;">Libre</td>`;
+                    }
+                }
+
+                html += `</tr>`;
+            }
+
+            horarioBody.innerHTML = html;
+
+            // Show schedule container
+            document.getElementById('scheduleContainer').style.display = 'block';
+
+            showMessage('success', `Horario del aula ${aulaCode} generado correctamente`);
+        }
+
+        function verHorarioDesdeResultados(aulaCode) {
+            if (!aulaCode) {
+                showMessage('error', 'Código de aula no válido');
+                return;
+            }
+
+            if (currentData.oferta.length === 0) {
+                showMessage('error', 'Por favor cargue los datos primero');
+                return;
+            }
+
+            // Find classroom info
+            const aula = currentData.aulas.find(a => a.codigo === aulaCode);
+            if (!aula) {
+                showMessage('error', 'Aula no encontrada');
+                return;
+            }
+
+            // Update title
+            const aulaTitle = document.getElementById('searchAulaTitle');
+            aulaTitle.textContent = `Horario Semanal del Aula: ${aula.codigo} - ${aula.nombre || ''} (Capacidad: ${aula.capacidad || 'N/A'})`;
+
+            // Block times definition
+            const blockTimes = [
+                '7:00-7:50', '7:50-8:40', '8:40-9:30', '9:30-10:20',
+                '10:15-11:05', '11:05-11:55', '11:55-12:45', '12:45-1:35',
+                '1:30-2:20', '2:20-3:10', '3:10-4:00', '4:00-4:50',
+                '4:45-5:35', '5:35-6:25', '6:25-7:15', '7:15-8:05',
+                '8:00-8:50', '8:50-9:40', '9:40-10:30'
+            ];
+
+            // Create schedule grid for Monday to Friday (days 1-5)
+            const schedule = {};
+            for (let block = 1; block <= 19; block++) {
+                schedule[block] = { 1: null, 2: null, 3: null, 4: null, 5: null };
+            }
+
+            // Find all sections using this classroom - ONLY WITH STUDENTS
+            currentData.oferta.forEach(section => {
+                // SKIP sections with 0 enrolled students (not in operation)
+                if (!section.inscritos || section.inscritos === 0) {
+                    return;
+                }
+
+                // Check each day (Monday to Friday only: 1-5)
+                for (let dia = 1; dia <= 5; dia++) {
+                    const horarioField = `horario${dia}`;
+                    const horario = section[horarioField];
+
+                    if (horario) {
+                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2"
+                        const slots = horario.split(',');
+                        slots.forEach(slot => {
+                            if (slot.includes(':')) {
+                                const [bloques, aula_slot] = slot.split(':');
+
+                                if (aula_slot.trim() === aulaCode) {
+                                    // Parse blocks
+                                    let startBlock, endBlock;
+                                    if (bloques.includes('-')) {
+                                        [startBlock, endBlock] = bloques.split('-').map(Number);
+                                    } else {
+                                        startBlock = endBlock = Number(bloques);
+                                    }
+
+                                    // Fill schedule for all blocks in range
+                                    for (let block = startBlock; block <= endBlock; block++) {
+                                        if (schedule[block]) {
+                                            const existingCell = schedule[block][dia];
+
+                                            // Check if there's already a section in this slot
+                                            if (existingCell) {
+                                                // Get the base codes (remove "+ XXX" if already combined)
+                                                const existingCodigo = existingCell.codigo.split(' + ')[0];
+                                                const newCodigo = section.codigo;
+
+                                                // Check if they are equivalent subjects
+                                                const areEquivalent = sonMateriasEquivalentes(existingCodigo, newCodigo);
+
+                                                schedule[block][dia] = {
+                                                    codigo: `${existingCell.codigo} + ${section.codigo}`,
+                                                    nombre: existingCell.nombre.length > section.nombre.length ? existingCell.nombre : section.nombre,
+                                                    seccion: `${existingCell.seccion} + ${section.seccion}`,
+                                                    profesor: existingCell.profesor === section.profesor ? existingCell.profesor : `${existingCell.profesor} / ${section.profesor}`,
+                                                    inscritos: existingCell.inscritos + section.inscritos, // SUM STUDENTS
+                                                    cupo: existingCell.cupo + section.cupo,
+                                                    bloques: `${startBlock}-${endBlock}`,
+                                                    isEquivalent: areEquivalent,
+                                                    isCollision: !areEquivalent // TRUE if NOT equivalent
+                                                };
+                                            } else {
+                                                schedule[block][dia] = {
+                                                    codigo: section.codigo,
+                                                    nombre: section.nombre,
+                                                    seccion: section.seccion,
+                                                    profesor: section.profesor,
+                                                    inscritos: section.inscritos,
+                                                    cupo: section.cupo,
+                                                    bloques: `${startBlock}-${endBlock}`,
+                                                    isCollision: false
+                                                };
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Build HTML table
+            const horarioBody = document.getElementById('searchHorarioBody');
+            let html = '';
+
+            for (let block = 1; block <= 19; block++) {
+                html += `<tr>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; font-weight: bold; background: #ecf0f1;">${block}</td>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #ecf0f1; font-size: 12px;">${blockTimes[block - 1]}</td>`;
+
+                // Days 1-5 (Monday to Friday)
+                for (let dia = 1; dia <= 5; dia++) {
+                    const cell = schedule[block][dia];
+
+                    if (cell) {
+                        // Determine background color: RED for collision, BLUE for normal/equivalent
+                        const bgColor = cell.isCollision ? '#e74c3c' : '#3498db';
+                        const warningIcon = cell.isCollision ? '⚠️ ' : '';
+
+                        html += `
+                            <td style="padding: 8px; border: 1px solid #ddd; background: ${bgColor}; color: white; font-size: 12px;">
+                                <div style="font-weight: bold; margin-bottom: 4px;">${warningIcon}${cell.codigo}</div>
+                                <div style="font-size: 11px; margin-bottom: 2px;">${cell.nombre}</div>
+                                <div style="font-size: 10px; opacity: 0.9;">Sección: ${cell.seccion}</div>
+                                <div style="font-size: 10px; opacity: 0.9;">Inscritos: ${cell.inscritos}/${cell.cupo}</div>
+                                ${cell.profesor ? `<div style="font-size: 10px; opacity: 0.9; margin-top: 2px;">${cell.profesor}</div>` : ''}
+                                ${cell.isCollision ? `<div style="font-size: 10px; font-weight: bold; margin-top: 4px;">¡COLISIÓN!</div>` : ''}
+                            </td>
+                        `;
+                    } else {
+                        html += `<td style="padding: 8px; border: 1px solid #ddd; background: #ecf0f1; text-align: center; color: #95a5a6; font-size: 11px;">Libre</td>`;
+                    }
+                }
+
+                html += `</tr>`;
+            }
+
+            horarioBody.innerHTML = html;
+
+            // Show schedule container
+            document.getElementById('searchScheduleContainer').style.display = 'block';
+
+            // Scroll to the schedule
+            document.getElementById('searchScheduleContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            showMessage('success', `Horario del aula ${aulaCode} cargado`);
+        }
+
+        async function detectConflicts() {
+            showLoading();
+
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('sede').value;
+
+            if (!periodo) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione un periodo');
+                return;
+            }
+
+            try {
+                let url = `/api/conflictos/${periodo}`;
+                if (sede) {
+                    url += `?sede=${sede}`;
+                }
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar conflictos del servidor');
+                }
+
+                const conflictsData = await response.json();
+
+                // Usar los datos directamente del servidor sin transformar
+                // El servidor ya devuelve el formato correcto con todos los campos necesarios
+                currentData.conflicts = conflictsData;
+
+                console.log(`Conflictos cargados: ${conflictsData.length}`);
+                if (conflictsData.length > 0) {
+                    console.log('Ejemplo de conflicto:', conflictsData[0]);
+                }
+
+                displayConflicts();
+                hideLoading();
+
+                if (currentData.conflicts.length > 0) {
+                    showMessage('error', `Se detectaron ${currentData.conflicts.length} conflictos`);
+                } else {
+                    showMessage('success', 'No se detectaron conflictos');
+                }
+
+            } catch (error) {
+                console.error('Error detectando conflictos:', error);
+                hideLoading();
+                showMessage('error', 'Error al detectar conflictos: ' + error.message);
+            }
+        }
+
+        async function detectarSeccionesSinAula() {
+            showLoading();
+
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('sede').value;
+
+            if (!periodo) {
+                hideLoading();
+                showMessage('error', 'Por favor seleccione un periodo');
+                return;
+            }
+
+            try {
+                let url = `/api/secciones-sin-aula/${periodo}`;
+                if (sede) {
+                    url += `?sede=${sede}`;
+                }
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar secciones sin aula del servidor');
+                }
+
+                const data = await response.json();
+
+                console.log(`Secciones sin aula: ${data.total}`);
+                if (data.secciones.length > 0) {
+                    console.log('Ejemplo:', data.secciones[0]);
+                }
+
+                displaySeccionesSinAula(data);
+                hideLoading();
+
+                if (data.total > 0) {
+                    showMessage('warning', `Se encontraron ${data.total} secciones sin aula asignada`);
+                } else {
+                    showMessage('success', 'Todas las secciones tienen aula asignada');
+                }
+
+            } catch (error) {
+                console.error('Error detectando secciones sin aula:', error);
+                hideLoading();
+                showMessage('error', 'Error al detectar secciones sin aula: ' + error.message);
+            }
+        }
+
+        function displaySeccionesSinAula(data) {
+            const resultsDiv = document.getElementById('sinAulaResults');
+
+            if (!data.secciones || data.secciones.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="success-box" style="text-align: center; padding: 40px;">
+                        <h3 style="color: #28a745; margin-bottom: 10px;">✓ Excelente</h3>
+                        <p style="font-size: 18px;">Todas las secciones con estudiantes inscritos tienen aula asignada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="alert-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                    <strong>⚠️ Total de secciones sin aula:</strong> ${data.total}
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Asignatura</th>
+                                <th>Sección</th>
+                                <th>Inscritos</th>
+                                <th>Cupo</th>
+                                <th>Profesor</th>
+                                <th>Sede</th>
+                                <th>Bloques Sin Aula</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.secciones.forEach(seccion => {
+                const bloquesHTML = seccion.BloquesSinAula.map(bloque =>
+                    `<div style="margin-bottom: 5px; padding: 5px; background: #f8f9fa; border-radius: 3px;">
+                        <strong>${bloque.Dia}:</strong> Bloques ${bloque.Bloques}
+                    </div>`
+                ).join('');
+
+                const ocupacionPct = ((seccion.Inscritos / seccion.Cupo) * 100).toFixed(0);
+
+                html += `
+                    <tr>
+                        <td><strong>${seccion.CodAsignatura}</strong></td>
+                        <td>${seccion.NombreAsignatura}</td>
+                        <td><span class="badge badge-warning">${seccion.Seccion}</span></td>
+                        <td style="text-align: center;"><strong>${seccion.Inscritos}</strong></td>
+                        <td style="text-align: center;">${seccion.Cupo} <small>(${ocupacionPct}%)</small></td>
+                        <td>${seccion.Profesor || 'Sin asignar'}</td>
+                        <td>${seccion.NombreSede}</td>
+                        <td>${bloquesHTML}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px;">💡 Recomendaciones</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Prioriza asignar aulas a las secciones con más estudiantes inscritos</li>
+                        <li>Verifica la capacidad requerida antes de asignar un aula</li>
+                        <li>Usa la pestaña "Disponibilidad de Aulas" para buscar aulas libres</li>
+                        <li>Revisa si hay conflictos antes de confirmar asignaciones</li>
+                    </ul>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function optimizeSuggestions() {
+            showLoading();
+            
+            setTimeout(() => {
+                // This would call an AI service for optimization
+                currentData.suggestions = generateAISuggestions();
+                displayOptimizationResults();
+                hideLoading();
+                showMessage('success', 'Optimización completada con IA');
+            }, 2000);
+        }
+
+        // ==================== FUNCIONES DE BÚSQUEDA CON IA ====================
+
+        // Variable para mantener el estado del chat
+        let aiConversacion = [];
+
+        async function iniciarBusquedaIA() {
+            const sede = document.getElementById('aiSede').value;
+            const tipoAula = document.getElementById('aiTipoAula').value;
+            const capacidad = document.getElementById('aiCapacidad').value;
+            const diasBloquesTexto = document.getElementById('aiDiasBloques').value;
+
+            // Parsear días y bloques (nuevo formato: "Lunes:1-4, Martes:2-6")
+            const diasBloquesParsed = parseDiasBloques(diasBloquesTexto);
+
+            // Construir el mensaje inicial
+            let mensaje = 'Necesito encontrar un aula';
+
+            if (tipoAula) mensaje += ` de tipo ${tipoAula}`;
+            if (capacidad) mensaje += ` con capacidad para al menos ${capacidad} estudiantes`;
+
+            if (diasBloquesParsed.length > 0) {
+                mensaje += ' disponible en los siguientes horarios: ';
+                const horarios = diasBloquesParsed.map(db => {
+                    const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                    return `${diasNombres[db.dia]} bloques ${db.bloqueInicio}-${db.bloqueFin}`;
+                });
+                mensaje += horarios.join(', ');
+            }
+
+            mensaje += ` en la sede ${sede === '1' ? 'San Diego' : 'Centro Histórico de Valencia'}`;
+            mensaje += '. Por favor dame propuestas específicas de aulas que cumplan con estos requisitos. Si no hay aulas disponibles, sugiere reasignaciones específicas.';
+
+            // Extraer parámetros estructurados
+            const parametros = {
+                diasBloques: diasBloquesParsed.length > 0 ? diasBloquesParsed : null,
+                capacidadMinima: capacidad ? parseInt(capacidad) : null,
+                tipoAula: tipoAula || null
+            };
+
+            // Limpiar conversación previa
+            aiConversacion = [];
+
+            // Mostrar el chat
+            document.getElementById('aiChatContainer').style.display = 'block';
+
+            // Enviar el mensaje inicial con parámetros
+            await enviarMensajeAIClaude(mensaje, parametros);
+
+            // Scroll al chat
+            document.getElementById('aiChatContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function parseDiasBloques(texto) {
+            if (!texto || !texto.trim()) return [];
+
+            const diasMap = {
+                'lunes': 1, 'monday': 1, 'lu': 1,
+                'martes': 2, 'tuesday': 2, 'ma': 2,
+                'miércoles': 3, 'miercoles': 3, 'wednesday': 3, 'mi': 3,
+                'jueves': 4, 'thursday': 4, 'ju': 4,
+                'viernes': 5, 'friday': 5, 'vi': 5,
+                'sábado': 6, 'sabado': 6, 'saturday': 6, 'sa': 6,
+                'domingo': 7, 'sunday': 7, 'do': 7
+            };
+
+            const resultado = [];
+            const partes = texto.split(',');
+
+            partes.forEach(parte => {
+                parte = parte.trim();
+                // Formato esperado: "Lunes:1-4" o "Martes:2-6"
+                const match = parte.match(/^([a-záéíóúñ]+):(\d+)-(\d+)$/i);
+
+                if (match) {
+                    const diaTexto = match[1].toLowerCase().trim();
+                    const bloqueInicio = parseInt(match[2]);
+                    const bloqueFin = parseInt(match[3]);
+
+                    if (diasMap[diaTexto]) {
+                        resultado.push({
+                            dia: diasMap[diaTexto],
+                            bloqueInicio: bloqueInicio,
+                            bloqueFin: bloqueFin
+                        });
+                    }
+                }
+            });
+
+            return resultado;
+        }
+
+        async function enviarMensajeIA() {
+            const input = document.getElementById('aiChatInput');
+            const mensaje = input.value.trim();
+
+            if (!mensaje) {
+                showMessage('error', 'Por favor escribe un mensaje');
+                return;
+            }
+
+            input.value = '';
+            await enviarMensajeAIClaude(mensaje);
+        }
+
+        async function enviarMensajeAIClaude(mensajeUsuario, parametros = null) {
+            const periodo = document.getElementById('periodo').value;
+            const sede = document.getElementById('aiSede').value;
+
+            if (!periodo) {
+                showMessage('error', 'Por favor selecciona un periodo primero');
+                return;
+            }
+
+            // Agregar mensaje del usuario al chat
+            agregarMensajeAlChat('user', mensajeUsuario);
+
+            // Mostrar indicador de carga
+            const chatMessages = document.getElementById('aiChatMessages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'aiLoadingIndicator';
+            loadingDiv.innerHTML = '<div class="ai-loading">Claude está pensando</div>';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const body = {
+                    periodo: periodo,
+                    sede: sede,
+                    mensajeUsuario: mensajeUsuario,
+                    conversacion: aiConversacion
+                };
+
+                // Solo incluir parámetros si están disponibles y completos
+                if (parametros && parametros.diasBloques && parametros.diasBloques.length > 0) {
+                    body.parametros = parametros;
+                }
+
+                const response = await fetch('/api/ai/optimize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                // Remover indicador de carga
+                const loading = document.getElementById('aiLoadingIndicator');
+                if (loading) loading.remove();
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showMessage('error', error.error || 'Error al comunicarse con la IA');
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Actualizar conversación
+                aiConversacion = data.conversacion;
+
+                // Agregar respuesta de la IA al chat
+                agregarMensajeAlChat('assistant', data.respuesta);
+
+            } catch (error) {
+                // Remover indicador de carga
+                const loading = document.getElementById('aiLoadingIndicator');
+                if (loading) loading.remove();
+
+                console.error('Error:', error);
+                showMessage('error', 'Error al conectar con el servidor de IA');
+            }
+        }
+
+        function agregarMensajeAlChat(role, content) {
+            const chatMessages = document.getElementById('aiChatMessages');
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${role}`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'ai-message-header';
+            headerDiv.textContent = role === 'user' ? 'Tú' : 'Claude';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'ai-message-content';
+            contentDiv.textContent = content;
+
+            messageDiv.appendChild(headerDiv);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+
+            // Scroll al último mensaje
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function reiniciarChat() {
+            aiConversacion = [];
+            document.getElementById('aiChatMessages').innerHTML = '';
+            document.getElementById('aiChatContainer').style.display = 'none';
+            document.getElementById('aiChatInput').value = '';
+
+            // Limpiar formulario
+            document.getElementById('aiCapacidad').value = '';
+            document.getElementById('aiDiasBloques').value = '';
+
+            showMessage('success', 'Chat reiniciado. Puedes hacer una nueva consulta.');
+        }
+
+        // DEPRECATED: Esta función ya no se usa, reemplazada por el sistema de chat con IA
+        function runAIOptimization() {
+            showMessage('info', 'Esta función ha sido reemplazada. Por favor usa el formulario de arriba para consultar con la IA.');
+        }
+
+        function displayAIOptimizationResults(suggestions) {
+            const optimizationDiv = document.getElementById('optimizationResults');
+            let html = '<h3>Sugerencias de Optimización</h3>';
+            
+            suggestions.forEach((suggestion, index) => {
+                html += `
+                    <div class="suggestion-card">
+                        <div class="suggestion-header">
+                            <span class="suggestion-title">Sugerencia #${index + 1}</span>
+                            <span class="suggestion-score">Score: ${suggestion.score}/100</span>
+                        </div>
+                        <div class="suggestion-details">
+                            <strong>Acción:</strong> ${suggestion.action}<br>
+                            <strong>Razón:</strong> ${suggestion.reason}<br>
+                            <strong>Beneficio:</strong> ${suggestion.benefit}<br>
+                            <button class="btn btn-primary" style="margin-top: 10px;" onclick="applySuggestion(${index})">
+                                Aplicar Cambio
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            optimizationDiv.innerHTML = html;
+        }
+
+        function applySuggestion(index) {
+            const suggestion = currentData.suggestions[index];
+            currentData.pendingChanges.push(suggestion);
+            updatePendingChanges();
+            showMessage('success', 'Cambio agregado a la lista de pendientes');
+        }
+
+        function updatePendingChanges() {
+            const changesList = document.getElementById('changesList');
+            if (currentData.pendingChanges.length === 0) {
+                changesList.innerHTML = '<p>No hay cambios pendientes</p>';
+            } else {
+                let html = '<ul>';
+                currentData.pendingChanges.forEach((change, index) => {
+                    html += `
+                        <li>
+                            ${change.action}
+                            <button onclick="removeChange(${index})" style="margin-left: 10px;">Eliminar</button>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                changesList.innerHTML = html;
+            }
+        }
+
+        function removeChange(index) {
+            currentData.pendingChanges.splice(index, 1);
+            updatePendingChanges();
+        }
+
+        function saveChanges() {
+            if (currentData.pendingChanges.length === 0) {
+                showMessage('error', 'No hay cambios para guardar');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('uam_aulas_changes', JSON.stringify(currentData.pendingChanges));
+            showMessage('success', 'Cambios guardados localmente');
+        }
+
+        function exportChanges() {
+            if (currentData.pendingChanges.length === 0) {
+                showMessage('error', 'No hay cambios para exportar');
+                return;
+            }
+            
+            // Generate SQL commands for database update
+            let sqlCommands = generateSQLCommands(currentData.pendingChanges);
+            downloadSQL(sqlCommands);
+            showMessage('success', 'Archivo SQL generado para actualizar la base de datos');
+        }
+
+        function exportData() {
+            const exportData = {
+                periodo: document.getElementById('periodo').value,
+                sede: document.getElementById('sede').value,
+                timestamp: new Date().toISOString(),
+                oferta: currentData.oferta,
+                aulas: currentData.aulas,
+                conflicts: currentData.conflicts,
+                pendingChanges: currentData.pendingChanges
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `asignacion_aulas_${document.getElementById('periodo').value}_${Date.now()}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showMessage('success', 'Datos exportados correctamente');
+        }
+
+        function generateSQLCommands(changes) {
+            let sql = '-- SQL Commands for UAM Classroom Assignment Updates\n';
+            sql += `-- Generated: ${new Date().toISOString()}\n\n`;
+            
+            changes.forEach(change => {
+                // Generate appropriate UPDATE statements based on change type
+                sql += `-- ${change.action}\n`;
+                sql += `UPDATE Oferta SET /* appropriate fields */ WHERE /* conditions */;\n\n`;
+            });
+            
+            return sql;
+        }
+
+        function downloadSQL(sqlContent) {
+            const dataUri = 'data:text/sql;charset=utf-8,'+ encodeURIComponent(sqlContent);
+            const exportFileDefaultName = `update_aulas_${Date.now()}.sql`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Sample data generators (these would be replaced with actual database queries)
+        // DEPRECATED: These functions are no longer used
+        // Data is now loaded from the real database via API endpoints
+        // Kept for reference only - can be removed in future versions
+
+        // function generateSampleOferta() {
+        //     return [
+        //         { codigo: 'MAT101', nombre: 'Matemática I', seccion: '01', aula: 'A-101', horario: 'L:1-2,W:3-4', cupo: 40, inscritos: 35, sede: '1' },
+        //         { codigo: 'FIS101', nombre: 'Física I', seccion: '01', aula: 'LAB-1', horario: 'M:1-2,J:3-4', cupo: 30, inscritos: 28, sede: '1' },
+        //         { codigo: 'QUI101', nombre: 'Química I', seccion: '01', aula: 'LAB-2', horario: 'L:3-4,V:1-2', cupo: 25, inscritos: 20, sede: '1' },
+        //         { codigo: 'ING101', nombre: 'Inglés I', seccion: '01', aula: 'A-102', horario: 'M:5-6,J:5-6', cupo: 35, inscritos: 30, sede: '1' },
+        //         { codigo: 'MAT101', nombre: 'Matemática I', seccion: '02', aula: 'A-103', horario: 'M:7-8,J:7-8', cupo: 40, inscritos: 38, sede: '1' }
+        //     ];
+        // }
+
+        // function generateSampleAulas() {
+        //     return [
+        //         { codigo: 'A-101', nombre: 'Aula 101', capacidad: 40, edificio: 'A', sede: '1' },
+        //         { codigo: 'A-102', nombre: 'Aula 102', capacidad: 35, edificio: 'A', sede: '1' },
+        //         { codigo: 'A-103', nombre: 'Aula 103', capacidad: 40, edificio: 'A', sede: '1' },
+        //         { codigo: 'LAB-1', nombre: 'Laboratorio Física', capacidad: 30, edificio: 'LAB', sede: '1' },
+        //         { codigo: 'LAB-2', nombre: 'Laboratorio Química', capacidad: 25, edificio: 'LAB', sede: '1' }
+        //     ];
+        // }
+
+        function analyzeRoomAvailability() {
+            // Analyze which rooms are available at different time slots
+            return currentData.aulas.map(aula => {
+                const usage = calculateRoomUsage(aula);
+                return {
+                    ...aula,
+                    occupancyRate: usage.rate,
+                    availableSlots: usage.available
+                };
+            });
+        }
+
+        function calculateRoomUsage(aula) {
+            // Calculate usage based on current assignments
+            const totalSlots = 54; // 9 slots * 6 days
+            const usedSlots = currentData.oferta.filter(o => o.aula === aula.codigo).length * 2;
+            return {
+                rate: ((usedSlots / totalSlots) * 100).toFixed(1),
+                available: totalSlots - usedSlots
+            };
+        }
+
+        function findScheduleConflicts() {
+            // This function analyzes local data for conflicts
+            // The server also has a /api/conflictos endpoint with more accurate detection
+            const conflicts = [];
+
+            // Check for capacity issues from loaded data
+            currentData.oferta.forEach(section => {
+                // Extract aula from any horario field
+                let aulaCode = null;
+                for (let i = 1; i <= 7; i++) {
+                    const horario = section[`horario${i}`];
+                    if (horario) {
+                        const parsed = parseSchedule(horario);
+                        if (parsed.length > 0 && parsed[0].aula) {
+                            aulaCode = parsed[0].aula;
+                            break;
+                        }
+                    }
+                }
+
+                if (aulaCode) {
+                    const aula = currentData.aulas.find(a => a.codigo === aulaCode);
+                    if (aula && section.inscritos > aula.capacidad) {
+                        conflicts.push({
+                            type: 'capacity_exceeded',
+                            section: section,
+                            aula: aula,
+                            message: `${section.codigo}-${section.seccion} tiene ${section.inscritos} estudiantes pero ${aula.codigo} solo tiene capacidad para ${aula.capacidad}`
+                        });
+                    }
+                }
+            });
+
+            return conflicts;
+        }
+
+        function schedulesOverlap(schedule1, schedule2) {
+            // Parse and check if two schedules overlap
+            // This is a simplified version
+            const slots1 = parseSchedule(schedule1);
+            const slots2 = parseSchedule(schedule2);
+            
+            for (let slot1 of slots1) {
+                for (let slot2 of slots2) {
+                    if (slot1.day === slot2.day && slotsOverlap(slot1.blocks, slot2.blocks)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function parseSchedule(schedule) {
+            // Parse schedule format like "L:1-2,W:3-4" or "1-2:AULA"
+            if (!schedule || schedule === null || schedule === undefined) {
+                return [];
+            }
+
+            const slots = [];
+            const parts = schedule.split(',');
+            parts.forEach(part => {
+                if (part && part.includes(':')) {
+                    const segments = part.split(':');
+                    // Handle format "day:blocks" or "blocks:aula"
+                    // If first segment is a number, it's "blocks:aula" format
+                    if (/^\d/.test(segments[0])) {
+                        // Format: "1-2:AULA" - extract blocks only
+                        slots.push({ blocks: segments[0], aula: segments[1] });
+                    } else {
+                        // Format: "L:1-2" - day and blocks
+                        slots.push({ day: segments[0], blocks: segments[1] });
+                    }
+                }
+            });
+            return slots;
+        }
+
+        function slotsOverlap(blocks1, blocks2) {
+            // Check if block ranges overlap
+            const [start1, end1] = blocks1.split('-').map(Number);
+            const [start2, end2] = blocks2.split('-').map(Number);
+            return !(end1 < start2 || end2 < start1);
+        }
+
+        function generateAISuggestions() {
+            // Generate AI-based optimization suggestions
+            const suggestions = [];
+            
+            // Suggest moving under-utilized sections
+            currentData.oferta.forEach(section => {
+                if (section.inscritos < section.cupo * 0.5) {
+                    suggestions.push({
+                        action: `Considerar mover ${section.codigo}-${section.seccion} a un aula más pequeña`,
+                        reason: `Solo ${section.inscritos}/${section.cupo} estudiantes inscritos`,
+                        benefit: 'Liberar aula grande para secciones con más demanda',
+                        score: 85
+                    });
+                }
+            });
+            
+            // Suggest consolidating sections
+            const courseGroups = {};
+            currentData.oferta.forEach(section => {
+                if (!courseGroups[section.codigo]) {
+                    courseGroups[section.codigo] = [];
+                }
+                courseGroups[section.codigo].push(section);
+            });
+            
+            Object.values(courseGroups).forEach(sections => {
+                if (sections.length > 1) {
+                    const totalInscritos = sections.reduce((sum, s) => sum + s.inscritos, 0);
+                    const totalCupo = sections.reduce((sum, s) => sum + s.cupo, 0);
+                    if (totalInscritos < totalCupo * 0.6) {
+                        suggestions.push({
+                            action: `Considerar consolidar secciones de ${sections[0].nombre}`,
+                            reason: `Baja ocupación total: ${totalInscritos}/${totalCupo}`,
+                            benefit: 'Optimizar uso de recursos y profesores',
+                            score: 90
+                        });
+                    }
+                }
+            });
+            
+            return suggestions;
+        }
+
+        function generateDetailedAISuggestions() {
+            // More detailed AI suggestions
+            return generateAISuggestions();
+        }
+
+        function populateScheduleGrid() {
+            const grid = document.getElementById('scheduleGrid');
+            const days = ['Hora', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const timeSlots = [
+                '7:00-8:30', '8:45-10:05', '10:15-11:45', '11:50-13:30',
+                '13:30-15:05', '15:05-16:40', '16:40-18:15', '18:15-19:50', '19:50-21:25'
+            ];
+            
+            let html = '';
+            
+            // Headers
+            days.forEach(day => {
+                html += `<div class="grid-header">${day}</div>`;
+            });
+            
+            // Time slots and cells
+            timeSlots.forEach((slot, slotIndex) => {
+                html += `<div class="time-slot">${slot}</div>`;
+                for (let day = 1; day <= 6; day++) {
+                    const classes = getClassesForSlot(day, slotIndex + 1);
+                    let cellContent = '';
+                    let cellClass = 'grid-cell';
+                    
+                    if (classes.length === 0) {
+                        cellClass += ' available';
+                        cellContent = '<span style="color: #6c757d;">Disponible</span>';
+                    } else if (classes.length === 1) {
+                        cellClass += ' occupied';
+                        cellContent = `
+                            <div class="class-info">
+                                <div class="class-code">${classes[0].codigo}</div>
+                                <div class="class-name">${classes[0].nombre}</div>
+                                <div class="class-section">Sección ${classes[0].seccion}</div>
+                                <div class="class-students">${classes[0].inscritos}/${classes[0].cupo} estudiantes</div>
+                            </div>
+                        `;
+                    } else {
+                        cellClass += ' conflict';
+                        cellContent = `
+                            <div class="class-info">
+                                <div style="color: #e74c3c; font-weight: 600;">⚠️ Conflicto</div>
+                                ${classes.map(c => `<div>${c.codigo}-${c.seccion}</div>`).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    html += `<div class="${cellClass}" onclick="showCellDetails(${day}, ${slotIndex + 1})">${cellContent}</div>`;
+                }
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function getClassesForSlot(day, slot) {
+            // Get classes scheduled for a specific day and time slot
+            // Day is 1-7 (Lunes-Domingo), slot is the time block number
+
+            return currentData.oferta.filter(section => {
+                // Check all horario fields (horario1 through horario7)
+                // horario1 = Lunes, horario2 = Martes, ..., horario7 = Domingo
+                const horarioKey = `horario${day}`;
+                const horario = section[horarioKey];
+
+                if (!horario) {
+                    return false;
+                }
+
+                // Parse the schedule (format: "1-2:AULA" or multiple separated by comma)
+                const slots = parseSchedule(horario);
+
+                return slots.some(s => {
+                    if (s.blocks) {
+                        try {
+                            const [start, end] = s.blocks.split('-').map(Number);
+                            // Check if the requested slot falls within this range
+                            return slot >= start && slot <= end;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                    return false;
+                });
+            });
+        }
+
+        function showCellDetails(day, slot) {
+            const classes = getClassesForSlot(day, slot);
+            const dayNames = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const modal = document.getElementById('detailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = `${dayNames[day]} - Bloque ${slot}`;
+            
+            if (classes.length === 0) {
+                modalBody.innerHTML = `
+                    <p>Este bloque está disponible.</p>
+                    <button class="btn btn-primary" onclick="assignToSlot(${day}, ${slot})">
+                        Asignar Sección
+                    </button>
+                `;
+            } else {
+                let html = '<h3>Secciones en este bloque:</h3>';
+                classes.forEach(section => {
+                    html += `
+                        <div class="suggestion-card">
+                            <h4>${section.codigo} - ${section.nombre}</h4>
+                            <p>Sección: ${section.seccion}</p>
+                            <p>Aula: ${section.aula}</p>
+                            <p>Inscritos: ${section.inscritos}/${section.cupo}</p>
+                            <button class="btn btn-warning" onclick="reassignSection('${section.codigo}', '${section.seccion}')">
+                                Reasignar
+                            </button>
+                        </div>
+                    `;
+                });
+                modalBody.innerHTML = html;
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        function assignToSlot(day, slot) {
+            // Logic to assign a section to this slot
+            showMessage('info', 'Función de asignación en desarrollo');
+            closeModal();
+        }
+
+        function reassignSection(codigo, seccion) {
+            // Logic to reassign a section
+            showMessage('info', `Reasignando ${codigo}-${seccion}...`);
+            closeModal();
+        }
+
+        async function updateStatistics() {
+            // Kept for compatibility - statistics now generated on demand
+        }
+
+        function generarEstadisticas() {
+            if (currentData.oferta.length === 0 || currentData.aulas.length === 0) {
+                showMessage('error', 'Por favor cargue los datos primero');
+                return;
+            }
+
+            const sede = document.getElementById('statsSede').value;
+            const tipoAula = document.getElementById('statsTipoAula').value;
+            const sedeNames = { '1': 'San Diego', '2': 'Centro Valencia' };
+
+            if (!sede) {
+                showMessage('error', 'Por favor seleccione una sede');
+                return;
+            }
+
+            // Update title
+            const statsTitle = document.getElementById('statsTitle');
+            let titleText = `Disponibilidad de Aulas - ${sedeNames[sede]}`;
+            if (tipoAula) {
+                titleText += ` - Tipo: ${tipoAula}`;
+            }
+            statsTitle.textContent = titleText;
+
+            // Block times definition
+            const blockTimes = [
+                '7:00-7:50', '7:50-8:40', '8:40-9:30', '9:30-10:20',
+                '10:15-11:05', '11:05-11:55', '11:55-12:45', '12:45-1:35',
+                '1:30-2:20', '2:20-3:10', '3:10-4:00', '4:00-4:50',
+                '4:45-5:35', '5:35-6:25', '6:25-7:15', '7:15-8:05',
+                '8:00-8:50', '8:50-9:40', '9:40-10:30'
+            ];
+
+            // Create availability grid for Monday to Friday (days 1-5)
+            const availability = {};
+            for (let block = 1; block <= 19; block++) {
+                availability[block] = {
+                    1: { available: 0, capacity: 0, occupied: 0 },
+                    2: { available: 0, capacity: 0, occupied: 0 },
+                    3: { available: 0, capacity: 0, occupied: 0 },
+                    4: { available: 0, capacity: 0, occupied: 0 },
+                    5: { available: 0, capacity: 0, occupied: 0 }
+                };
+            }
+
+            // Get all rooms for this sede - FILTER BY SEDE AND TIPO
+            const allRooms = currentData.aulas.filter(aula => {
+                if (aula.sede !== sede) return false;
+                if (tipoAula && aula.tipo !== tipoAula) return false;
+                return true;
+            });
+
+            // For each block and day, calculate available rooms and total capacity
+            for (let block = 1; block <= 19; block++) {
+                for (let dia = 1; dia <= 5; dia++) {
+                    // Get occupied rooms for this block and day
+                    const occupiedRooms = new Set();
+
+                    // FILTER sections by sede
+                    currentData.oferta.filter(section => section.sede === sede).forEach(section => {
+                        const horarioField = `horario${dia}`;
+                        const horario = section[horarioField];
+
+                        if (horario) {
+                            const slots = horario.split(',');
+                            slots.forEach(slot => {
+                                if (slot.includes(':')) {
+                                    const [bloques, aula] = slot.split(':');
+
+                                    let startBlock, endBlock;
+                                    if (bloques.includes('-')) {
+                                        [startBlock, endBlock] = bloques.split('-').map(Number);
+                                    } else {
+                                        startBlock = endBlock = Number(bloques);
+                                    }
+
+                                    // Check if this block overlaps with the current block
+                                    if (block >= startBlock && block <= endBlock) {
+                                        occupiedRooms.add(aula.trim());
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    // Count available rooms and their capacity
+                    let availableCount = 0;
+                    let totalCapacity = 0;
+                    let occupiedCount = 0;
+
+                    allRooms.forEach(room => {
+                        if (!occupiedRooms.has(room.codigo)) {
+                            availableCount++;
+                            totalCapacity += room.capacidad || 0;
+                        } else {
+                            occupiedCount++;
+                        }
+                    });
+
+                    availability[block][dia] = {
+                        available: availableCount,
+                        capacity: totalCapacity,
+                        occupied: occupiedCount
+                    };
+                }
+            }
+
+            // Build HTML table
+            const statsBody = document.getElementById('statsBody');
+            let html = '';
+
+            for (let block = 1; block <= 19; block++) {
+                html += `<tr>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; font-weight: bold; background: #ecf0f1;">${block}</td>`;
+                html += `<td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #ecf0f1; font-size: 12px;">${blockTimes[block - 1]}</td>`;
+
+                // Days 1-5 (Monday to Friday)
+                for (let dia = 1; dia <= 5; dia++) {
+                    const data = availability[block][dia];
+
+                    // Calculate occupancy percentage
+                    const totalRooms = allRooms.length;
+                    const occupancyPercent = totalRooms > 0 ? (data.occupied / totalRooms) * 100 : 0;
+                    const availabilityPercent = totalRooms > 0 ? (data.available / totalRooms) * 100 : 0;
+
+                    // Determine background color based on occupancy percentage
+                    let bgColor = '#27ae60'; // Green - low occupancy (high availability)
+                    if (occupancyPercent > 70) {
+                        bgColor = '#e74c3c'; // Red - high occupancy (low availability)
+                    } else if (occupancyPercent > 40) {
+                        bgColor = '#f39c12'; // Orange - medium occupancy
+                    }
+
+                    html += `
+                        <td style="padding: 8px; border: 1px solid #ddd; background: ${bgColor}; color: white; text-align: center;">
+                            <div style="font-weight: bold; font-size: 16px;">${data.available}</div>
+                            <div style="font-size: 11px; margin-top: 2px;">aulas disponibles</div>
+                            <div style="font-size: 12px; margin-top: 4px; font-weight: bold;">${data.capacity}</div>
+                            <div style="font-size: 10px;">capacidad disponible</div>
+                            <div style="font-size: 13px; margin-top: 6px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 3px; border-radius: 3px;">${occupancyPercent.toFixed(0)}%</div>
+                            <div style="font-size: 9px;">ocupación</div>
+                        </td>
+                    `;
+                }
+
+                html += `</tr>`;
+            }
+
+            statsBody.innerHTML = html;
+
+            // Update summary - FILTER BY SEDE
+            const totalAulas = allRooms.length;
+            const totalCapacity = allRooms.reduce((sum, aula) => sum + (aula.capacidad || 0), 0);
+            const seccionesActivas = currentData.oferta.filter(s => {
+                // Check if section is in this sede AND has any room assigned
+                if (s.sede !== sede) return false;
+                for (let dia = 1; dia <= 5; dia++) {
+                    if (s[`horario${dia}`]) return true;
+                }
+                return false;
+            }).length;
+
+            document.getElementById('statsTotalAulas').textContent = totalAulas;
+            document.getElementById('statsCapacidadTotal').textContent = totalCapacity;
+            document.getElementById('statsSeccionesActivas').textContent = seccionesActivas;
+            document.getElementById('statsSedeNombre').textContent = sedeNames[sede];
+
+            // Show stats container
+            document.getElementById('statsContainer').style.display = 'block';
+
+            showMessage('success', 'Estadísticas generadas correctamente');
+        }
+
+        function calculateLocalStatistics() {
+            // Calculate average occupancy from local data
+            let totalInscritos = 0;
+            let totalCapacity = 0;
+
+            currentData.oferta.forEach(section => {
+                totalInscritos += section.inscritos || 0;
+                totalCapacity += section.cupo || 0;
+            });
+
+            const avgOcc = totalCapacity > 0 ? ((totalInscritos / totalCapacity) * 100).toFixed(1) : 0;
+            document.getElementById('avgOccupancy').textContent = avgOcc + '%';
+            document.getElementById('efficiency').textContent = avgOcc + '%';
+        }
+
+        function displayAvailabilityResults(availableRooms) {
+            const tbody = document.getElementById('availabilityBody');
+            const sede = document.getElementById('availSede').value;
+            const sedeNames = { '1': 'San Diego', '2': 'Centro Valencia' };
+            const sedeNombre = sedeNames[sede] || 'N/A';
+
+            let html = '';
+
+            if (availableRooms.length === 0) {
+                html = `<tr><td colspan="7" style="text-align: center; padding: 20px;">No hay aulas disponibles en este horario en la sede ${sedeNombre}</td></tr>`;
+            } else {
+                availableRooms.forEach(room => {
+                    // Usar los campos correctos del servidor
+                    const codigo = room.CodAula || room.codigo;
+                    const nombre = room.NombreAula || room.nombre;
+                    const capacidad = room.Capacidad || room.capacidad;
+                    const edificio = room.CodEdificio || room.edificio || 'N/A';
+                    const ocupacion = room.occupancyRate || 0;
+                    const disponible = room.availableSlots || 'Disponible';
+
+                    const occupancyClass = ocupacion > 80 ? 'badge-danger' :
+                                          ocupacion > 40 ? 'badge-warning' :
+                                          'badge-success';
+
+                    html += `
+                        <tr>
+                            <td><strong>${codigo}</strong><br><small>${nombre}</small></td>
+                            <td>${capacidad}</td>
+                            <td>${edificio}</td>
+                            <td>${sedeNombre}</td>
+                            <td style="color: green; font-weight: 600;">✓ ${disponible}</td>
+                            <td><span class="badge ${occupancyClass}">${ocupacion}%</span></td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewRoomDetails('${codigo}')">
+                                    Ver Detalles
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function viewRoomDetails(roomCode) {
+            const room = currentData.aulas.find(a => a.codigo === roomCode);
+            const sections = currentData.oferta.filter(o => o.aula === roomCode);
+            
+            const modal = document.getElementById('detailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = `Detalles del Aula ${roomCode}`;
+            
+            let html = `
+                <h3>Información del Aula</h3>
+                <p><strong>Nombre:</strong> ${room.nombre}</p>
+                <p><strong>Capacidad:</strong> ${room.capacidad} estudiantes</p>
+                <p><strong>Edificio:</strong> ${room.edificio}</p>
+                <p><strong>Sede:</strong> ${room.sede === '1' ? 'San Diego' : 'Centro Valencia'}</p>
+                
+                <h3 style="margin-top: 20px;">Secciones Asignadas</h3>
+            `;
+            
+            if (sections.length === 0) {
+                html += '<p>No hay secciones asignadas a esta aula.</p>';
+            } else {
+                html += '<ul>';
+                sections.forEach(section => {
+                    html += `<li>${section.codigo} - ${section.nombre} (Sección ${section.seccion}): ${section.inscritos}/${section.cupo} estudiantes</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            modalBody.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function displayConflicts() {
+            const conflictsDiv = document.getElementById('conflictsList');
+
+            if (currentData.conflicts.length === 0) {
+                conflictsDiv.innerHTML = '<div class="success-message">✅ No se detectaron conflictos en la asignación actual.</div>';
+            } else {
+                let html = `<div class="error-message">⚠️ Se detectaron ${currentData.conflicts.length} conflicto(s) de horario</div>`;
+
+                // Debug: mostrar primer conflicto en consola
+                if (currentData.conflicts.length > 0) {
+                    console.log('Primer conflicto:', currentData.conflicts[0]);
+                }
+
+                currentData.conflicts.forEach((conflict, index) => {
+                    // Determinar qué campos usar (compatibilidad con formato antiguo y nuevo)
+                    const asig1 = conflict.CodAsignatura1 || conflict.asignatura1 || 'N/A';
+                    const asig2 = conflict.CodAsignatura2 || conflict.asignatura2 || 'N/A';
+                    const nombreAsig1 = conflict.Asignatura1 || conflict.nombreAsignatura1 || 'Sin nombre';
+                    const nombreAsig2 = conflict.Asignatura2 || conflict.nombreAsignatura2 || 'Sin nombre';
+                    const secc1 = conflict.Seccion1 || conflict.seccion1 || '?';
+                    const secc2 = conflict.Seccion2 || conflict.seccion2 || '?';
+                    const insc1 = conflict.Inscritos1 !== undefined ? conflict.Inscritos1 : (conflict.inscritos1 || 0);
+                    const insc2 = conflict.Inscritos2 !== undefined ? conflict.Inscritos2 : (conflict.inscritos2 || 0);
+                    const cupo1 = conflict.Cupo1 !== undefined ? conflict.Cupo1 : (conflict.cupo1 || 0);
+                    const cupo2 = conflict.Cupo2 !== undefined ? conflict.Cupo2 : (conflict.cupo2 || 0);
+                    const aula = conflict.Aula || conflict.aula || 'N/A';
+                    const dia = conflict.Dia || conflict.dia || 'N/A';
+                    const bloques1 = conflict.Bloques1 || conflict.bloques1 || 'N/A';
+                    const bloques2 = conflict.Bloques2 || conflict.bloques2 || 'N/A';
+
+                    html += `
+                        <div class="suggestion-card" style="border-color: #e74c3c; border-left: 5px solid #e74c3c;">
+                            <div class="suggestion-header" style="background-color: #fee; padding: 10px;">
+                                <span class="suggestion-title" style="color: #e74c3c; font-weight: bold;">
+                                    🚨 Conflicto #${index + 1} - Aula ${aula} - ${dia}
+                                </span>
+                            </div>
+                            <div class="suggestion-details" style="padding: 15px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <th style="text-align: left; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; width: 50%;">
+                                            Sección 1
+                                        </th>
+                                        <th style="text-align: left; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; width: 50%;">
+                                            Sección 2
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            <strong>${asig1}-${secc1}</strong><br>
+                                            ${nombreAsig1 || 'Sin nombre'}
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            <strong>${asig2}-${secc2}</strong><br>
+                                            ${nombreAsig2 || 'Sin nombre'}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            📊 Inscritos: <strong>${insc1}</strong> / ${cupo1}
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            📊 Inscritos: <strong>${insc2}</strong> / ${cupo2}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            🕐 Bloques: <strong>${bloques1}</strong>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            🕐 Bloques: <strong>${bloques2}</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                    <strong>⚠️ Problema:</strong> Ambas secciones tienen aula asignada (<strong>${aula}</strong>),
+                                    tienen estudiantes inscritos, y sus horarios se solapan el día <strong>${dia}</strong>.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                conflictsDiv.innerHTML = html;
+            }
+        }
+
+        function resolveConflict(index) {
+            const conflict = currentData.conflicts[index];
+            // Logic to resolve the conflict
+            showMessage('info', `Resolviendo conflicto: ${conflict.message}`);
+            // You would implement the actual resolution logic here
+        }
+
+        function displayOptimizationResults() {
+            const optimizationDiv = document.getElementById('optimizationResults');
+            
+            if (currentData.suggestions.length === 0) {
+                optimizationDiv.innerHTML = '<div class="info-box">No hay sugerencias de optimización en este momento.</div>';
+            } else {
+                let html = '<h3>Sugerencias de Optimización</h3>';
+                currentData.suggestions.forEach((suggestion, index) => {
+                    html += `
+                        <div class="suggestion-card">
+                            <div class="suggestion-header">
+                                <span class="suggestion-title">Sugerencia #${index + 1}</span>
+                                <span class="suggestion-score">Score: ${suggestion.score}/100</span>
+                            </div>
+                            <div class="suggestion-details">
+                                <strong>Acción:</strong> ${suggestion.action}<br>
+                                <strong>Razón:</strong> ${suggestion.reason}<br>
+                                <strong>Beneficio:</strong> ${suggestion.benefit}
+                            </div>
+                        </div>
+                    `;
+                });
+                optimizationDiv.innerHTML = html;
+            }
+        }
+
+        function filterByOccupancy(level) {
+            // Update active chip
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter the display based on occupancy level
+            // Implementation would filter the grid display
+            showMessage('info', `Filtrando por ocupación: ${level}`);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

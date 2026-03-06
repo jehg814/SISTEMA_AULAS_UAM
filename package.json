@@ -1,0 +1,28 @@
+{
+  "name": "sistema-asignacion-aulas-uam",
+  "version": "1.0.0",
+  "description": "Sistema de Asignación de Aulas para la Universidad Arturo Michelena",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "uam",
+    "aulas",
+    "asignacion",
+    "universidad"
+  ],
+  "author": "UAM Sistemas",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "mariadb": "^3.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
