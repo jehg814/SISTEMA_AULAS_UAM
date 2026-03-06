@@ -437,7 +437,7 @@ WHERE o1.CodPeriodo = '${update.periodo}'
             } else if (update.type === 'clear_assignment') {
                 sql += `
 -- Clearing classroom assignment for ${update.codAsignatura}-${update.seccion}
-UPDATE Oferta 
+UPDATE Oferta
 SET Horario1 = NULL,
     Horario2 = NULL,
     Horario3 = NULL,
@@ -448,6 +448,20 @@ SET Horario1 = NULL,
 WHERE CodPeriodo = '${update.periodo}'
   AND CodAsignatura = '${update.codAsignatura}'
   AND Secc = '${update.seccion}';
+`;
+            } else if (update.type === 'change_schedule') {
+                const newVal = update.newValue ? `'${update.newValue}'` : 'NULL';
+                const origCheck = update.originalValue ? `= '${update.originalValue}'` : 'IS NULL';
+                sql += `
+-- Changing schedule for ${update.codAsignatura}-${update.seccion} ${update.horarioField}
+-- Before: ${update.originalValue || 'NULL'}
+-- After: ${update.newValue || 'NULL'}
+UPDATE Oferta
+SET ${update.horarioField} = ${newVal}
+WHERE CodPeriodo = '${update.periodo}'
+  AND CodAsignatura = '${update.codAsignatura}'
+  AND Secc = '${update.seccion}'
+  AND ${update.horarioField} ${origCheck};
 `;
             }
         });

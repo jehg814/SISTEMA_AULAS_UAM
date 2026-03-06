@@ -645,6 +645,15 @@
                     </select>
                 </div>
                 <div class="control-group">
+                    <label for="periodoReferencia">Periodo Referencia (Inscritos)</label>
+                    <select id="periodoReferencia">
+                        <option value="">Sin referencia</option>
+                        <option value="20253">2025-3 (Intensivo Actual)</option>
+                        <option value="20252">2025-2</option>
+                        <option value="20251">2025-1</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label for="dia">Día de la Semana</label>
                     <select id="dia">
                         <option value="">Seleccione un día</option>
@@ -730,6 +739,9 @@
                 </button>
                 <button class="tab" onclick="switchTab('management')">
                     ⚙️ Gestión de Cambios
+                </button>
+                <button class="tab" onclick="switchTab('planning')" id="planningTab">
+                    📋 Planificación
                 </button>
             </div>
 
@@ -1245,6 +1257,34 @@
                     📤 Exportar para BD
                 </button>
             </div>
+
+            <div id="planning" class="tab-content">
+                <h2>📋 Planificación - Reporte de Cambios</h2>
+                <div id="planningBanner" class="info-box" style="display:none;">
+                    <p id="planningBannerText"></p>
+                </div>
+                <div id="planningNotReady" class="info-box">
+                    <p>Cargue datos de un periodo para activar el modo planificación. Use el campo "Periodo Referencia" para cruzar datos de inscritos del periodo anterior.</p>
+                </div>
+                <div id="planningContent" style="display:none;">
+                    <div id="planningStats" style="margin-bottom: 20px;"></div>
+                    <div id="planningDiff"></div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="savePlanningSession()">
+                            💾 Guardar Sesión
+                        </button>
+                        <button class="btn btn-primary" onclick="exportPlanningSQL()" style="margin-left: 10px;">
+                            📤 Exportar SQL
+                        </button>
+                        <button class="btn btn-warning" onclick="exportPlanningJSON()" style="margin-left: 10px;">
+                            📥 Exportar JSON
+                        </button>
+                        <button class="btn btn-danger" onclick="resetPlanning()" style="margin-left: 10px;">
+                            🔄 Reiniciar Planificación
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1270,6 +1310,11 @@
             suggestions: [],
             pendingChanges: []
         };
+
+        // Planning mode state
+        let originalData = null;    // Immutable snapshot of loaded data
+        let referenciaData = null;  // Previous period data (for enrollment reference)
+        let planningMode = false;
 
         // Materias equivalentes (loaded from server)
         let materiasEquivalentesMap = new Map();
@@ -1409,6 +1454,8 @@
             cargarMateriasEquivalentes();
             cargarTiposAula();
             loadInitialData();
+            // Try to restore a saved planning session
+            setTimeout(() => { loadPlanningSession(); }, 1500);
         }
 
         function loadInitialData() {
@@ -1541,12 +1588,70 @@
                     tipo: item.Tipo
                 }));
 
+                // Load reference period data if specified
+                const periodoRef = document.getElementById('periodoReferencia').value;
+                referenciaData = null;
+                if (periodoRef && periodoRef !== periodo) {
+                    try {
+                        let refUrl = `/api/oferta/${periodoRef}`;
+                        if (sede) refUrl += `?sede=${sede}`;
+                        const refResponse = await fetch(refUrl);
+                        if (refResponse.ok) {
+                            const refData = await refResponse.json();
+                            referenciaData = refData.map(item => ({
+                                codigo: item.CodAsignatura,
+                                seccion: item.Secc,
+                                inscritos: item.Inscritos,
+                                cupo: item.Cupo
+                            }));
+                            // Cross-reference: copy inscritos from reference to current sections
+                            currentData.oferta.forEach(seccion => {
+                                const ref = referenciaData.find(
+                                    r => r.codigo === seccion.codigo && r.seccion === seccion.seccion
+                                );
+                                if (ref) {
+                                    seccion.inscritosReferencia = ref.inscritos;
+                                    seccion.cupoReferencia = ref.cupo;
+                                    // If current inscritos is 0, use reference for planning
+                                    if (!seccion.inscritos || seccion.inscritos === 0) {
+                                        seccion.inscritos = ref.inscritos;
+                                    }
+                                }
+                            });
+                        }
+                    } catch (refError) {
+                        console.error('Error cargando periodo de referencia:', refError);
+                    }
+                }
+
+                // Snapshot for planning mode
+                originalData = {
+                    oferta: JSON.parse(JSON.stringify(currentData.oferta)),
+                    aulas: JSON.parse(JSON.stringify(currentData.aulas)),
+                    periodo: periodo,
+                    periodoReferencia: periodoRef || null,
+                    sede: sede,
+                    loadedAt: new Date().toISOString()
+                };
+                planningMode = true;
+                currentData.pendingChanges = [];
+
+                // Run local conflict detection
+                detectLocalConflicts();
+                updatePlanningModeUI();
+
                 // Populate classroom selector
                 populateAulaSelector();
                 // populateScheduleGrid(); // No longer needed with new visualization
                 updateStatistics();
                 hideLoading();
-                showMessage('success', `Datos cargados: ${currentData.oferta.length} secciones, ${currentData.aulas.length} aulas`);
+
+                let msg = `Datos cargados: ${currentData.oferta.length} secciones, ${currentData.aulas.length} aulas`;
+                if (referenciaData) {
+                    msg += ` | Referencia: ${referenciaData.length} secciones del periodo ${periodoRef}`;
+                }
+                msg += ' | Modo planificación activo';
+                showMessage('success', msg);
 
             } catch (error) {
                 console.error('Error cargando datos:', error);
@@ -2098,13 +2203,28 @@
             showLoading();
 
             const periodo = document.getElementById('periodo').value;
-            const sede = document.getElementById('sede').value;
 
             if (!periodo) {
                 hideLoading();
                 showMessage('error', 'Por favor seleccione un periodo');
                 return;
             }
+
+            // In planning mode, use local detection (works on edited data)
+            if (planningMode && currentData.oferta.length > 0) {
+                detectLocalConflicts();
+                displayConflicts();
+                hideLoading();
+
+                if (currentData.conflicts.length > 0) {
+                    showMessage('error', `Se detectaron ${currentData.conflicts.length} conflictos (detección local)`);
+                } else {
+                    showMessage('success', 'No se detectaron conflictos');
+                }
+                return;
+            }
+
+            const sede = document.getElementById('sede').value;
 
             try {
                 let url = `/api/conflictos/${periodo}`;
@@ -2552,24 +2672,32 @@
         }
 
         function saveChanges() {
+            if (planningMode) {
+                savePlanningSession();
+                return;
+            }
             if (currentData.pendingChanges.length === 0) {
                 showMessage('error', 'No hay cambios para guardar');
                 return;
             }
-            
+
             // Save to localStorage
             localStorage.setItem('uam_aulas_changes', JSON.stringify(currentData.pendingChanges));
             showMessage('success', 'Cambios guardados localmente');
         }
 
         function exportChanges() {
+            if (planningMode) {
+                exportPlanningSQL();
+                return;
+            }
             if (currentData.pendingChanges.length === 0) {
                 showMessage('error', 'No hay cambios para exportar');
                 return;
             }
-            
+
             // Generate SQL commands for database update
-            let sqlCommands = generateSQLCommands(currentData.pendingChanges);
+            let sqlCommands = generateSQLCommands();
             downloadSQL(sqlCommands);
             showMessage('success', 'Archivo SQL generado para actualizar la base de datos');
         }
@@ -2598,18 +2726,7 @@
             showMessage('success', 'Datos exportados correctamente');
         }
 
-        function generateSQLCommands(changes) {
-            let sql = '-- SQL Commands for UAM Classroom Assignment Updates\n';
-            sql += `-- Generated: ${new Date().toISOString()}\n\n`;
-            
-            changes.forEach(change => {
-                // Generate appropriate UPDATE statements based on change type
-                sql += `-- ${change.action}\n`;
-                sql += `UPDATE Oferta SET /* appropriate fields */ WHERE /* conditions */;\n\n`;
-            });
-            
-            return sql;
-        }
+        // generateSQLCommands is now defined in the Planning Mode section below
 
         function downloadSQL(sqlContent) {
             const dataUri = 'data:text/sql;charset=utf-8,'+ encodeURIComponent(sqlContent);
@@ -2668,40 +2785,102 @@
             };
         }
 
-        function findScheduleConflicts() {
-            // This function analyzes local data for conflicts
-            // The server also has a /api/conflictos endpoint with more accurate detection
+        function detectLocalConflicts() {
             const conflicts = [];
+            const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-            // Check for capacity issues from loaded data
-            currentData.oferta.forEach(section => {
-                // Extract aula from any horario field
-                let aulaCode = null;
-                for (let i = 1; i <= 7; i++) {
-                    const horario = section[`horario${i}`];
-                    if (horario) {
-                        const parsed = parseSchedule(horario);
-                        if (parsed.length > 0 && parsed[0].aula) {
-                            aulaCode = parsed[0].aula;
-                            break;
+            // Get all sections that have any schedule assigned
+            const secciones = currentData.oferta.filter(s => {
+                for (let d = 1; d <= 7; d++) {
+                    if (s[`horario${d}`]) return true;
+                }
+                return false;
+            });
+
+            // Detect schedule conflicts (same aula, overlapping blocks)
+            for (let i = 0; i < secciones.length; i++) {
+                for (let j = i + 1; j < secciones.length; j++) {
+                    const sec1 = secciones[i];
+                    const sec2 = secciones[j];
+
+                    for (let dia = 1; dia <= 7; dia++) {
+                        const h1 = sec1[`horario${dia}`];
+                        const h2 = sec2[`horario${dia}`];
+                        if (!h1 || !h2) continue;
+
+                        const slots1 = parseSchedule(h1);
+                        const slots2 = parseSchedule(h2);
+
+                        for (const s1 of slots1) {
+                            for (const s2 of slots2) {
+                                if (s1.aula && s2.aula && s1.aula === s2.aula) {
+                                    const parts1 = s1.blocks.split('-').map(Number);
+                                    const parts2 = s2.blocks.split('-').map(Number);
+                                    const start1 = parts1[0], end1 = parts1.length > 1 ? parts1[1] : parts1[0];
+                                    const start2 = parts2[0], end2 = parts2.length > 1 ? parts2[1] : parts2[0];
+
+                                    if (!(end1 < start2 || end2 < start1)) {
+                                        // Check equivalences
+                                        if (!sonMateriasEquivalentes(sec1.codigo, sec2.codigo)) {
+                                            conflicts.push({
+                                                type: 'schedule_conflict',
+                                                CodAsignatura1: sec1.codigo,
+                                                Asignatura1: sec1.nombre,
+                                                Seccion1: sec1.seccion,
+                                                Inscritos1: sec1.inscritos,
+                                                CodAsignatura2: sec2.codigo,
+                                                Asignatura2: sec2.nombre,
+                                                Seccion2: sec2.seccion,
+                                                Inscritos2: sec2.inscritos,
+                                                Aula: s1.aula,
+                                                Dia: diasNombres[dia],
+                                                Bloques1: s1.blocks,
+                                                Bloques2: s2.blocks
+                                            });
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                if (aulaCode) {
-                    const aula = currentData.aulas.find(a => a.codigo === aulaCode);
-                    if (aula && section.inscritos > aula.capacidad) {
-                        conflicts.push({
-                            type: 'capacity_exceeded',
-                            section: section,
-                            aula: aula,
-                            message: `${section.codigo}-${section.seccion} tiene ${section.inscritos} estudiantes pero ${aula.codigo} solo tiene capacidad para ${aula.capacidad}`
-                        });
-                    }
+            // Detect capacity conflicts
+            secciones.forEach(section => {
+                if (!section.inscritos || section.inscritos === 0) return;
+                for (let dia = 1; dia <= 7; dia++) {
+                    const horario = section[`horario${dia}`];
+                    if (!horario) continue;
+                    const slots = parseSchedule(horario);
+                    slots.forEach(slot => {
+                        if (slot.aula) {
+                            const aula = currentData.aulas.find(a => a.codigo === slot.aula);
+                            if (aula && section.inscritos > aula.capacidad) {
+                                conflicts.push({
+                                    type: 'capacity_exceeded',
+                                    CodAsignatura1: section.codigo,
+                                    Asignatura1: section.nombre,
+                                    Seccion1: section.seccion,
+                                    Aula: slot.aula,
+                                    Dia: diasNombres[dia],
+                                    Inscritos: section.inscritos,
+                                    Capacidad: aula.capacidad,
+                                    message: `${section.codigo}-${section.seccion} tiene ${section.inscritos} inscritos pero ${slot.aula} solo tiene capacidad para ${aula.capacidad}`
+                                });
+                            }
+                        }
+                    });
                 }
             });
 
+            currentData.conflicts = conflicts;
             return conflicts;
+        }
+
+        // Keep old name as alias for compatibility
+        function findScheduleConflicts() {
+            return detectLocalConflicts();
         }
 
         function schedulesOverlap(schedule1, schedule2) {
@@ -2933,8 +3112,145 @@
         }
 
         function reassignSection(codigo, seccion) {
-            // Logic to reassign a section
-            showMessage('info', `Reasignando ${codigo}-${seccion}...`);
+            const section = currentData.oferta.find(
+                s => s.codigo === codigo && s.seccion === seccion
+            );
+            if (!section) {
+                showMessage('error', 'Sección no encontrada');
+                return;
+            }
+
+            const modal = document.getElementById('detailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = `Reasignar: ${section.codigo}-${section.seccion} ${section.nombre || ''}`;
+
+            const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            let html = `<div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px;">
+                <p><strong>Materia:</strong> ${section.codigo} - ${section.nombre || 'N/A'}</p>
+                <p><strong>Sección:</strong> ${section.seccion}</p>
+                <p><strong>Inscritos:</strong> ${section.inscritos || 0} / Cupo: ${section.cupo || 0}</p>
+                ${section.inscritosReferencia !== undefined ? `<p><strong>Inscritos referencia:</strong> ${section.inscritosReferencia}</p>` : ''}
+                <p><strong>Profesor:</strong> ${section.profesor || 'N/A'}</p>
+                <p><strong>Sede:</strong> ${section.nombreSede || section.sede}</p>
+            </div>`;
+
+            let hasDays = false;
+            for (let dia = 1; dia <= 7; dia++) {
+                const horario = section[`horario${dia}`];
+                if (!horario) continue;
+                hasDays = true;
+
+                const slots = parseSchedule(horario);
+                slots.forEach((slot, idx) => {
+                    if (!slot.aula) return;
+                    const minCapacity = section.inscritos || 0;
+                    const compatibleAulas = currentData.aulas
+                        .filter(a => {
+                            if (section.sede && a.sede != section.sede) return false;
+                            return true;
+                        })
+                        .sort((a, b) => a.capacidad - b.capacidad);
+
+                    html += `<div style="background:white; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+                        <strong>${diasNombres[dia]}</strong> - Bloques ${slot.blocks}
+                        <br>Aula actual: <strong style="color:#2c3e50;">${slot.aula}</strong>`;
+
+                    const aulaActual = currentData.aulas.find(a => a.codigo === slot.aula);
+                    if (aulaActual) {
+                        html += ` (Cap: ${aulaActual.capacidad}, ${aulaActual.tipo || 'Salon'})`;
+                    }
+
+                    html += `<br><label style="margin-top:8px; display:inline-block;">Nueva aula:</label>
+                        <select id="newAula_${dia}_${idx}" style="padding:6px; margin-left:8px; min-width:250px;">
+                            <option value="${slot.aula}">${slot.aula} (sin cambio)</option>`;
+
+                    compatibleAulas.forEach(a => {
+                        if (a.codigo !== slot.aula) {
+                            const capColor = a.capacidad >= minCapacity ? '#27ae60' : '#e74c3c';
+                            html += `<option value="${a.codigo}" style="color:${capColor}">${a.codigo} - Cap:${a.capacidad} - ${a.tipo || 'Salon'} - Edif:${a.edificio}</option>`;
+                        }
+                    });
+
+                    html += `</select></div>`;
+                });
+            }
+
+            if (!hasDays) {
+                html += '<p style="color:#e74c3c;">Esta sección no tiene horario asignado en ningún día.</p>';
+            }
+
+            html += `<button class="btn btn-primary" onclick="applyReassignment('${codigo}','${seccion}')" style="margin-top:15px; padding:10px 30px;">
+                Aplicar Cambios
+            </button>
+            <button class="btn" onclick="closeModal()" style="margin-top:15px; margin-left:10px; padding:10px 20px;">
+                Cancelar
+            </button>`;
+
+            modalBody.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function applyReassignment(codigo, seccion) {
+            const section = currentData.oferta.find(
+                s => s.codigo === codigo && s.seccion === seccion
+            );
+            if (!section) return;
+
+            const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const changes = [];
+
+            for (let dia = 1; dia <= 7; dia++) {
+                const horario = section[`horario${dia}`];
+                if (!horario) continue;
+
+                const slots = parseSchedule(horario);
+                const newParts = [];
+
+                slots.forEach((slot, idx) => {
+                    const selectEl = document.getElementById(`newAula_${dia}_${idx}`);
+                    if (!selectEl) {
+                        newParts.push(`${slot.blocks}:${slot.aula}`);
+                        return;
+                    }
+
+                    const newAula = selectEl.value;
+                    newParts.push(`${slot.blocks}:${newAula}`);
+
+                    if (newAula !== slot.aula) {
+                        changes.push({
+                            type: 'reassign_classroom',
+                            codAsignatura: codigo,
+                            nombre: section.nombre,
+                            seccion: seccion,
+                            dia: dia,
+                            diaNombre: diasNombres[dia],
+                            bloques: slot.blocks,
+                            oldAula: slot.aula,
+                            newAula: newAula,
+                            horarioField: `Horario${dia}`,
+                            localField: `horario${dia}`,
+                            oldHorario: horario,
+                            action: `${codigo}-${seccion}: ${diasNombres[dia]} bloques ${slot.blocks}: ${slot.aula} → ${newAula}`
+                        });
+                    }
+                });
+
+                // Update the horario field in currentData
+                section[`horario${dia}`] = newParts.join(',');
+            }
+
+            if (changes.length > 0) {
+                currentData.pendingChanges.push(...changes);
+                updatePendingChanges();
+                detectLocalConflicts();
+                updatePlanningModeUI();
+                showMessage('success', `${changes.length} cambio(s) aplicado(s) a ${codigo}-${seccion}`);
+            } else {
+                showMessage('info', 'No se realizaron cambios');
+            }
+
             closeModal();
         }
 
@@ -3338,6 +3654,398 @@
             // Filter the display based on occupancy level
             // Implementation would filter the grid display
             showMessage('info', `Filtrando por ocupación: ${level}`);
+        }
+
+        // ==================== PLANNING MODE FUNCTIONS ====================
+
+        function updatePlanningModeUI() {
+            const banner = document.getElementById('planningBanner');
+            const bannerText = document.getElementById('planningBannerText');
+            const notReady = document.getElementById('planningNotReady');
+            const content = document.getElementById('planningContent');
+
+            if (planningMode && originalData) {
+                const changeCount = currentData.pendingChanges.length;
+                const conflictCount = currentData.conflicts ? currentData.conflicts.length : 0;
+                const diff = generateDiff();
+
+                banner.style.display = 'block';
+                banner.style.background = changeCount > 0 ? '#fff3cd' : '#d4edda';
+                banner.style.borderLeft = changeCount > 0 ? '4px solid #ffc107' : '4px solid #28a745';
+                bannerText.innerHTML = `<strong>Modo Planificación activo</strong> | Periodo: ${originalData.periodo}` +
+                    (originalData.periodoReferencia ? ` | Ref: ${originalData.periodoReferencia}` : '') +
+                    ` | ${diff.length} cambio(s) en horarios | ${conflictCount} conflicto(s)`;
+
+                notReady.style.display = 'none';
+                content.style.display = 'block';
+                renderPlanningReport();
+            } else {
+                banner.style.display = 'none';
+                notReady.style.display = 'block';
+                content.style.display = 'none';
+            }
+        }
+
+        function generateDiff() {
+            if (!originalData) return [];
+
+            const diffs = [];
+            const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+            currentData.oferta.forEach(current => {
+                const original = originalData.oferta.find(
+                    o => o.codigo === current.codigo && o.seccion === current.seccion
+                );
+                if (!original) return;
+
+                for (let dia = 1; dia <= 7; dia++) {
+                    const field = `horario${dia}`;
+                    if (current[field] !== original[field]) {
+                        diffs.push({
+                            codigo: current.codigo,
+                            nombre: current.nombre,
+                            seccion: current.seccion,
+                            inscritos: current.inscritos,
+                            cupo: current.cupo,
+                            profesor: current.profesor,
+                            sede: current.sede,
+                            dia: dia,
+                            diaNombre: diasNombres[dia],
+                            field: field,
+                            dbField: `Horario${dia}`,
+                            original: original[field],
+                            modified: current[field]
+                        });
+                    }
+                }
+            });
+
+            return diffs;
+        }
+
+        function renderPlanningReport() {
+            const statsDiv = document.getElementById('planningStats');
+            const diffDiv = document.getElementById('planningDiff');
+
+            const diffs = generateDiff();
+            const conflictCount = currentData.conflicts ? currentData.conflicts.length : 0;
+
+            // Unique sections affected
+            const seccionesAfectadas = new Set(diffs.map(d => `${d.codigo}-${d.seccion}`));
+
+            // Stats
+            statsDiv.innerHTML = `
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px;">
+                    <div style="background:#3498db; color:white; padding:20px; border-radius:8px; text-align:center;">
+                        <div style="font-size:28px; font-weight:bold;">${diffs.length}</div>
+                        <div>Cambios en horarios</div>
+                    </div>
+                    <div style="background:#2ecc71; color:white; padding:20px; border-radius:8px; text-align:center;">
+                        <div style="font-size:28px; font-weight:bold;">${seccionesAfectadas.size}</div>
+                        <div>Secciones afectadas</div>
+                    </div>
+                    <div style="background:${conflictCount > 0 ? '#e74c3c' : '#27ae60'}; color:white; padding:20px; border-radius:8px; text-align:center;">
+                        <div style="font-size:28px; font-weight:bold;">${conflictCount}</div>
+                        <div>Conflictos detectados</div>
+                    </div>
+                </div>
+            `;
+
+            // Diff table
+            if (diffs.length === 0) {
+                diffDiv.innerHTML = `<div class="info-box" style="margin-top:20px;"><p>No se han realizado cambios aún. Use el botón "Reasignar" en las secciones para modificar asignaciones de aula.</p></div>`;
+                return;
+            }
+
+            let html = `
+                <h3 style="margin-top:20px;">Detalle de Cambios</h3>
+                <div class="table-responsive">
+                    <table class="data-table" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#34495e; color:white;">
+                                <th style="padding:10px;">Código</th>
+                                <th style="padding:10px;">Asignatura</th>
+                                <th style="padding:10px;">Sección</th>
+                                <th style="padding:10px;">Día</th>
+                                <th style="padding:10px;">Horario Original</th>
+                                <th style="padding:10px;">Horario Nuevo</th>
+                                <th style="padding:10px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            diffs.forEach((diff, idx) => {
+                // Parse original and modified to show aula changes clearly
+                const origSlots = diff.original ? parseSchedule(diff.original) : [];
+                const newSlots = diff.modified ? parseSchedule(diff.modified) : [];
+
+                const origDisplay = origSlots.map(s => `Bloques ${s.blocks}: <strong>${s.aula}</strong>`).join('<br>') || '<em>Sin asignar</em>';
+                const newDisplay = newSlots.map(s => `Bloques ${s.blocks}: <strong>${s.aula}</strong>`).join('<br>') || '<em>Sin asignar</em>';
+
+                const bgColor = !diff.original ? '#d4edda' : !diff.modified ? '#f8d7da' : '#fff3cd';
+
+                html += `
+                    <tr style="background:${bgColor};">
+                        <td style="padding:8px; border:1px solid #ddd;"><strong>${diff.codigo}</strong></td>
+                        <td style="padding:8px; border:1px solid #ddd;">${diff.nombre || ''}</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${diff.seccion}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${diff.diaNombre}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${origDisplay}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${newDisplay}</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">
+                            <button class="btn btn-warning" onclick="revertChange(${idx})" style="padding:4px 10px; font-size:12px;">Revertir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+
+            // Show conflicts if any
+            if (conflictCount > 0) {
+                html += `<h3 style="margin-top:20px; color:#e74c3c;">Conflictos Detectados</h3>`;
+                currentData.conflicts.forEach(c => {
+                    if (c.type === 'schedule_conflict') {
+                        html += `<div style="background:#f8d7da; padding:10px; margin:5px 0; border-radius:6px; border-left:4px solid #e74c3c;">
+                            <strong>${c.Dia}</strong> - Aula ${c.Aula}: ${c.CodAsignatura1}-${c.Seccion1} (Bloques ${c.Bloques1}) vs ${c.CodAsignatura2}-${c.Seccion2} (Bloques ${c.Bloques2})
+                        </div>`;
+                    } else if (c.type === 'capacity_exceeded') {
+                        html += `<div style="background:#fff3cd; padding:10px; margin:5px 0; border-radius:6px; border-left:4px solid #ffc107;">
+                            ${c.message}
+                        </div>`;
+                    }
+                });
+            }
+
+            diffDiv.innerHTML = html;
+        }
+
+        function revertChange(diffIndex) {
+            const diffs = generateDiff();
+            if (diffIndex >= diffs.length) return;
+
+            const diff = diffs[diffIndex];
+            const section = currentData.oferta.find(
+                s => s.codigo === diff.codigo && s.seccion === diff.seccion
+            );
+            if (!section) return;
+
+            // Restore original value
+            section[diff.field] = diff.original;
+
+            // Remove related pending changes
+            currentData.pendingChanges = currentData.pendingChanges.filter(
+                c => !(c.codAsignatura === diff.codigo && c.seccion === diff.seccion && c.localField === diff.field)
+            );
+
+            detectLocalConflicts();
+            updatePendingChanges();
+            updatePlanningModeUI();
+            showMessage('success', `Cambio revertido: ${diff.codigo}-${diff.seccion} ${diff.diaNombre}`);
+        }
+
+        // ==================== SQL GENERATION ====================
+
+        function generateSQLCommands() {
+            const diffs = generateDiff();
+            if (diffs.length === 0) return '-- No hay cambios\n';
+
+            const periodo = document.getElementById('periodo').value;
+
+            let sql = `-- =====================================================\n`;
+            sql += `-- UAM Sistema de Asignación de Aulas\n`;
+            sql += `-- Actualizaciones de Planificación\n`;
+            sql += `-- Generado: ${new Date().toISOString()}\n`;
+            sql += `-- Periodo: ${periodo}\n`;
+            if (originalData && originalData.periodoReferencia) {
+                sql += `-- Periodo de referencia: ${originalData.periodoReferencia}\n`;
+            }
+            sql += `-- Total de cambios: ${diffs.length}\n`;
+            sql += `-- =====================================================\n\n`;
+            sql += `START TRANSACTION;\n\n`;
+
+            diffs.forEach((diff, idx) => {
+                const escapedNew = diff.modified ? diff.modified.replace(/'/g, "''") : null;
+                const escapedOrig = diff.original ? diff.original.replace(/'/g, "''") : null;
+
+                sql += `-- Cambio ${idx + 1}: ${diff.codigo}-${diff.seccion} ${diff.diaNombre}\n`;
+                sql += `-- Antes: ${diff.original || 'NULL'}\n`;
+                sql += `-- Después: ${diff.modified || 'NULL'}\n`;
+                sql += `UPDATE Oferta\n`;
+                sql += `SET ${diff.dbField} = ${escapedNew ? `'${escapedNew}'` : 'NULL'}\n`;
+                sql += `WHERE CodPeriodo = '${periodo}'\n`;
+                sql += `  AND CodAsignatura = '${diff.codigo}'\n`;
+                sql += `  AND Secc = '${diff.seccion}'`;
+
+                // Safety: verify original value hasn't changed
+                if (escapedOrig) {
+                    sql += `\n  AND ${diff.dbField} = '${escapedOrig}'`;
+                } else {
+                    sql += `\n  AND ${diff.dbField} IS NULL`;
+                }
+                sql += `;\n\n`;
+            });
+
+            sql += `COMMIT;\n\n`;
+            sql += `-- Fin de actualizaciones\n`;
+            sql += `-- Verifique las filas afectadas: deben ser ${diffs.length} en total\n`;
+
+            return sql;
+        }
+
+        function exportPlanningSQL() {
+            const sql = generateSQLCommands();
+            if (sql === '-- No hay cambios\n') {
+                showMessage('error', 'No hay cambios para exportar');
+                return;
+            }
+
+            const periodo = document.getElementById('periodo').value;
+            const dataUri = 'data:text/sql;charset=utf-8,' + encodeURIComponent(sql);
+            const fileName = `planificacion_aulas_${periodo}_${new Date().toISOString().slice(0,10)}.sql`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', fileName);
+            linkElement.click();
+
+            showMessage('success', 'Archivo SQL generado');
+        }
+
+        function exportPlanningJSON() {
+            const diffs = generateDiff();
+            const exportData = {
+                periodo: document.getElementById('periodo').value,
+                periodoReferencia: document.getElementById('periodoReferencia').value || null,
+                sede: document.getElementById('sede').value,
+                timestamp: new Date().toISOString(),
+                originalData: originalData,
+                currentOferta: currentData.oferta,
+                aulas: currentData.aulas,
+                cambios: diffs,
+                conflictos: currentData.conflicts,
+                pendingChanges: currentData.pendingChanges
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const fileName = `planificacion_completa_${exportData.periodo}_${new Date().toISOString().slice(0,10)}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', fileName);
+            linkElement.click();
+
+            showMessage('success', 'JSON de planificación exportado');
+        }
+
+        // ==================== SESSION PERSISTENCE ====================
+
+        function savePlanningSession() {
+            if (!planningMode || !originalData) {
+                showMessage('error', 'No hay sesión de planificación activa');
+                return;
+            }
+
+            const session = {
+                originalData: originalData,
+                currentOferta: currentData.oferta,
+                pendingChanges: currentData.pendingChanges,
+                savedAt: new Date().toISOString()
+            };
+
+            try {
+                localStorage.setItem('uam_planning_session', JSON.stringify(session));
+                showMessage('success', 'Sesión de planificación guardada');
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showMessage('error', 'No hay espacio suficiente en localStorage. Exporte como JSON.');
+                } else {
+                    showMessage('error', 'Error guardando sesión: ' + e.message);
+                }
+            }
+        }
+
+        function loadPlanningSession() {
+            try {
+                const saved = localStorage.getItem('uam_planning_session');
+                if (!saved) return false;
+
+                const session = JSON.parse(saved);
+                if (!session.originalData || !session.currentOferta) return false;
+
+                const savedDate = new Date(session.savedAt).toLocaleString();
+                if (!confirm(`Se encontró una sesión de planificación guardada (${savedDate}). ¿Desea restaurarla?`)) {
+                    return false;
+                }
+
+                originalData = session.originalData;
+                currentData.oferta = session.currentOferta;
+                currentData.pendingChanges = session.pendingChanges || [];
+
+                // Reload aulas from server
+                const sede = originalData.sede;
+                let aulasUrl = '/api/aulas';
+                if (sede) aulasUrl += `?sede=${sede}`;
+
+                fetch(aulasUrl)
+                    .then(r => r.json())
+                    .then(aulasData => {
+                        currentData.aulas = aulasData.map(item => ({
+                            codigo: item.CodAula,
+                            nombre: item.NombreAula,
+                            capacidad: item.Capacidad,
+                            edificio: item.CodEdificio,
+                            sede: item.CodSede,
+                            nombreSede: item.NombreSede,
+                            tipo: item.Tipo
+                        }));
+
+                        planningMode = true;
+                        document.getElementById('periodo').value = originalData.periodo;
+                        if (originalData.periodoReferencia) {
+                            document.getElementById('periodoReferencia').value = originalData.periodoReferencia;
+                        }
+                        if (originalData.sede) {
+                            document.getElementById('sede').value = originalData.sede;
+                        }
+
+                        populateAulaSelector();
+                        detectLocalConflicts();
+                        updatePlanningModeUI();
+                        updatePendingChanges();
+                        showMessage('success', `Sesión restaurada: ${currentData.oferta.length} secciones, ${currentData.pendingChanges.length} cambios pendientes`);
+                    })
+                    .catch(err => {
+                        console.error('Error restaurando aulas:', err);
+                        showMessage('error', 'Error al restaurar aulas del servidor');
+                    });
+
+                return true;
+            } catch (e) {
+                console.error('Error loading planning session:', e);
+                return false;
+            }
+        }
+
+        function resetPlanning() {
+            if (!originalData) {
+                showMessage('error', 'No hay sesión de planificación activa');
+                return;
+            }
+
+            if (!confirm('¿Está seguro de reiniciar? Se perderán todos los cambios realizados.')) {
+                return;
+            }
+
+            currentData.oferta = JSON.parse(JSON.stringify(originalData.oferta));
+            currentData.pendingChanges = [];
+            detectLocalConflicts();
+            updatePendingChanges();
+            updatePlanningModeUI();
+            populateAulaSelector();
+            showMessage('success', 'Planificación reiniciada al estado original');
         }
 
         // Close modal when clicking outside
