@@ -1,0 +1,37 @@
+CodAsignatura,Seccion,Asignatura,Inscritos,Dia,BloqueInicio,BloqueFin,AulaAsignada,CapacidadAula,TipoAula,Encaja,Notas
+ECS707,1T,Com. Publicitaria Internacional,2,Jueves,2,4,R3-2,40,SALON,SI,
+ECS910,1M,Legislación y Libertad Prensa,2,Martes,8,10,R3-2,40,SALON,SI,
+EPS203,6T,Inglés II,1,Jueves,1,3,E3-5,36,SALON,SI,
+HAG5334,2M,Diseño Computarizado I,32,Martes,9,12,LAB2,30,COMPUTACION,NO,Deficit -2
+HAG5334,3M,Diseño Computarizado I,23,Martes,1,4,LAB1,30,COMPUTACION,SI,
+HAG5334,4M,Diseño Computarizado I,30,Jueves,1,4,LAB1,30,COMPUTACION,SI,
+HAG6334,2M,Diseño Computarizado II,6,Miércoles,9,12,LAB1,30,COMPUTACION,SI,
+HAG7234,1M,Diseño Computarizado III,4,Jueves,4,6,LAB2,30,COMPUTACION,SI,
+HAG8334,4M,Diseño Computarizado IV,29,Viernes,9,12,LAB6,30,COMPUTACION,SI,
+IIE714,1M,Aprendizaje Profundo y Máquinas,15,Miércoles,2,4,LAB1,30,COMPUTACION,SI,
+IIE817,1M,Probabilidad y Estadística,18,Jueves,1,2,LAB2,30,COMPUTACION,SI,
+IIE817,2M,Probabilidad y Estadística,16,Jueves,1,2,FAILED,-,COMPUTACION,-,No hay lab COMPUTACION disponible Jueves bloques 1-2
+HAG7224,2501,Diseño Gráfico IV,2,Jueves,1,3,N3-8,25,SALON,SI,
+HAG7224,2M,Diseño Gráfico IV,21,Lunes,6,8,RPB-1,30,SALON,SI,
+HAG7224,3M,Diseño Gráfico IV,30,Martes,1,3,RPB-1,30,SALON,SI,
+HAG7224,3M,Diseño Gráfico IV,30,Miércoles,3,4,RPB-1,30,SALON,SI,
+IIE216,1M,Arquitectura Computadoras I,20,Martes,5,6,N3-8,25,LABORATORIO,SI,
+IIE216,2M,Arquitectura Computadoras I,9,Martes,5,6,LAB.COL,15,LABORATORIO,SI,
+IIE408,2M,Circuitos Eléctricos I,1,Lunes,6,7,LAB.ELE,20,LABORATORIO,SI,
+IIE408,2M,Circuitos Eléctricos I,1,Viernes,1,3,R1-9,45,SALON,SI,MIXTO - porcion teoria
+IIE909,1M,Robótica y Visión Industrial,8,Lunes,7,9,MICRO1,15,LABORATORIO,SI,
+SLC207,1M,Química Orgánica,18,Martes,4,5,MICRO3,16,LABORATORIO,NO,Deficit -2
+SLC207,1M,Química Orgánica,18,Miércoles,4,6,N3-8,25,LABORATORIO,SI,
+SLC307,1M,Biología Molecular,5,Martes,3,4,R2-5,45,SALON,SI,MIXTO semicolon - porcion teoria
+SLC410,1,Bioética,11,Lunes,1,3,N2-7,25,SALON,SI,MIXTO semicolon - porcion teoria
+SLC507,1,Microbiología II,8,Martes,5,7,R2-7,45,SALON,SI,MIXTO semicolon - porcion teoria
+SLC508,1,Microbiología III,7,Viernes,1,3,N2-7,25,SALON,SI,MIXTO semicolon - porcion teoria
+SLC606,1M,Anatomía Patológica II,4,Jueves,7,9,R3-3,40,SALON,SI,MIXTO semicolon - porcion teoria
+SLC804,1M,Citotecnología III,7,Martes,2,3,LAB.COL,15,LABORATORIO,SI,
+SLH307,1,Biología Molecular,1,Martes,3,4,A1-2,55,SALON,SI,MIXTO semicolon - porcion teoria
+SLH507,1,Microbiología II,1,Martes,5,7,VPB-3,55,SALON,SI,MIXTO semicolon - porcion teoria
+SLF703,2T,Métodos de Aplicación III,21,Martes,9,13,N3-4,28,SALON_CAMILLAS,SI,
+SLF703,3T,Métodos de Aplicación III,14,Martes,8,12,N3-2,16,SALON_CAMILLAS,SI,
+SLF802,3T,Métodos de Aplicación IV,29,Martes,9,13,N2-5,28,SALON_CAMILLAS,NO,Deficit -1
+SLF803,2T,Medicina Deportiva,31,Lunes,9,13,N3-3,28,SALON_CAMILLAS,NO,Deficit -3
+SLF804,3T,Técnicas Manuales I,27,Miércoles,9,13,N2-5,28,SALON_CAMILLAS,SI,

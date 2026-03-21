@@ -1,0 +1,206 @@
+[
+  {
+    "CodAsignatura": "EAC103",
+    "NombreAsignatura": "Metodología de la Investigación",
+    "Seccion": "1M",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "EAC106",
+    "NombreAsignatura": "Informática I",
+    "Seccion": "1M",
+    "Cupo": 2
+  },
+  {
+    "CodAsignatura": "EAC302",
+    "NombreAsignatura": "Informática III",
+    "Seccion": "2M",
+    "Cupo": 3
+  },
+  {
+    "CodAsignatura": "ECP205",
+    "NombreAsignatura": "Problemática Socioeconómica",
+    "Seccion": "1M",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "ECP405",
+    "NombreAsignatura": "Legislación Laboral",
+    "Seccion": "1M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS102",
+    "NombreAsignatura": "Inglés I",
+    "Seccion": "3M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS104",
+    "NombreAsignatura": "Ecología",
+    "Seccion": "3M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS107",
+    "NombreAsignatura": "Tecnicas de Investigación y Documentación",
+    "Seccion": "3M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS108",
+    "NombreAsignatura": "Formación Deportiva",
+    "Seccion": "1M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS707",
+    "NombreAsignatura": "Comunicación Publicitaria Internacional",
+    "Seccion": "1T",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "ECS910",
+    "NombreAsignatura": "Legislación y Libertad de Prensa (ELECTIVA)",
+    "Seccion": "1M",
+    "Cupo": 20
+  },
+  {
+    "CodAsignatura": "EPS104",
+    "NombreAsignatura": "Inglés I",
+    "Seccion": "6T",
+    "Cupo": 5
+  },
+  {
+    "CodAsignatura": "EPS106",
+    "NombreAsignatura": "Estadística I",
+    "Seccion": "6T",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "EPS109",
+    "NombreAsignatura": "Técnicas de Investigación y Documentación",
+    "Seccion": "6T",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "EPS110",
+    "NombreAsignatura": "Historia de Psicología",
+    "Seccion": "6T",
+    "Cupo": 5
+  },
+  {
+    "CodAsignatura": "IIE104",
+    "NombreAsignatura": "Actividades de Orientación",
+    "Seccion": "1M",
+    "Cupo": 50
+  },
+  {
+    "CodAsignatura": "IIE105",
+    "NombreAsignatura": "Educación para la Salud Física y Deportiva",
+    "Seccion": "1M",
+    "Cupo": 50
+  },
+  {
+    "CodAsignatura": "IIE109",
+    "NombreAsignatura": "Desarrollo de Habilidades del Pensamiento I",
+    "Seccion": "1M",
+    "Cupo": 50
+  },
+  {
+    "CodAsignatura": "IIE209",
+    "NombreAsignatura": "Desarrollo de Habilidades del Pensamiento II",
+    "Seccion": "1M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "IIE212",
+    "NombreAsignatura": "Álgebra Lineal",
+    "Seccion": "1M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "IIE213",
+    "NombreAsignatura": "Química General",
+    "Seccion": "1M",
+    "Cupo": 10
+  },
+  {
+    "CodAsignatura": "IIE314",
+    "NombreAsignatura": "Inglés I",
+    "Seccion": "1M",
+    "Cupo": 50
+  },
+  {
+    "CodAsignatura": "SLC103",
+    "NombreAsignatura": "Inglés Instrumental I",
+    "Seccion": "2501",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "SLC301",
+    "NombreAsignatura": "Biología Molecular",
+    "Seccion": "2501",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "SLC401",
+    "NombreAsignatura": "Bioética",
+    "Seccion": "1",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "SLF103",
+    "NombreAsignatura": "Socio-Antropología",
+    "Seccion": "2501",
+    "Cupo": 40
+  },
+  {
+    "CodAsignatura": "SLF207",
+    "NombreAsignatura": "Metodología de la Investigación I",
+    "Seccion": "2501",
+    "Cupo": 35
+  },
+  {
+    "CodAsignatura": "SLF804",
+    "NombreAsignatura": "Técnicas Manuales I",
+    "Seccion": "3T",
+    "Cupo": 46
+  },
+  {
+    "CodAsignatura": "SLH302",
+    "NombreAsignatura": "Bioestadística",
+    "Seccion": "1",
+    "Cupo": 1
+  },
+  {
+    "CodAsignatura": "SLH501",
+    "NombreAsignatura": "Histología I",
+    "Seccion": "1",
+    "Cupo": 5
+  },
+  {
+    "CodAsignatura": "SLH503",
+    "NombreAsignatura": "Histoquímica",
+    "Seccion": "1",
+    "Cupo": 5
+  },
+  {
+    "CodAsignatura": "SLH505",
+    "NombreAsignatura": "Administración de Servicios",
+    "Seccion": "1",
+    "Cupo": 5
+  },
+  {
+    "CodAsignatura": "STI101",
+    "NombreAsignatura": "Física Básica",
+    "Seccion": "1M",
+    "Cupo": 20
+  },
+  {
+    "CodAsignatura": "STI505",
+    "NombreAsignatura": "Radiología Odontológica",
+    "Seccion": "1T",
+    "Cupo": 10
+  }
+]

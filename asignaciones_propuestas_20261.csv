@@ -1,0 +1,79 @@
+CodAsignatura,NombreAsignatura,Seccion,Dia,DiaNum,BloqueInicio,BloqueFin,AulaAsignada,CapacidadAula,TipoAula,CapacidadEstimada,Clasificacion,Problematica
+HAG7224,Diseño Gráfico IV,3M,Martes,2,1,3,A1-2,55,SALON,33,EXISTENTE,NO
+HAG7224,Diseño Gráfico IV,3M,Miércoles,3,3,4,N2-3,45,SALON,33,EXISTENTE,NO
+HAG7224,Diseño Gráfico IV,2M,Lunes,1,6,8,R3-3,40,SALON,21,EXISTENTE,NO
+SLC207,Química Orgánica,1M,Martes,2,4,5,R2-9,40,SALON,18,EXISTENTE,NO
+SLC207,Química Orgánica,1M,Miércoles,3,4,6,V3-4,55,SALON,18,EXISTENTE,NO
+SLC307,Introducción al Laboratorio de Anatomía Patológica,1M,Martes,2,3,4,R2-5,45,SALON,15,EXISTENTE,NO
+SLC410,Anatomía y Fisiología Veterinaria I,1,Lunes,1,1,3,N2-7,25,SALON,15,EXISTENTE,NO
+HAG7224,Diseño Gráfico IV,2501,Jueves,4,1,3,E3-5,36,SALON,14,EXISTENTE,NO
+ECS707,Comunicación Publicitaria Internacional,1T,Jueves,4,2,4,R3-2,40,SALON,9,EXISTENTE,NO
+SLC507,Anatomía Patológica I,1,Martes,2,5,7,VPB-3,55,SALON,8,EXISTENTE,NO
+SLC606,Anatomía Patológica II,1M,Jueves,4,7,9,R3-3,40,SALON,8,EXISTENTE,NO
+SLH606,Anatomía Patológica II,1M,Jueves,4,7,9,R3-9,40,SALON,8,EXISTENTE,NO
+SLC508,Anatomía y Fisiología Veterinaria II,1,Viernes,5,1,3,N2-7,25,SALON,7,EXISTENTE,NO
+SLH410,Anatomía y Fisiología Veterinaria I,1,Lunes,1,1,3,E3-3,30,SALON,5,EXISTENTE,NO
+SLH207,Química Orgánica,1,Martes,2,4,5,R3-5,45,SALON,2,EXISTENTE,NO
+SLH207,Química Orgánica,1,Miércoles,3,4,5,R3-5,45,SALON,2,EXISTENTE,NO
+SLH307,Introducción al Laboratorio de Anatomía Patológica,1,Martes,2,3,4,E1-1,80,SALON,1,EXISTENTE,NO
+SLH507,Anatomía Patológica I,1,Martes,2,5,7,E1-2,60,SALON,1,EXISTENTE,NO
+SLH508,Anatomía y Fisiología Veterinaria II,1,Viernes,5,1,3,R1-9,45,SALON,1,EXISTENTE,NO
+EAC809,Control de Gestión,1M,Martes,2,6,7,L2-4,60,SALON,40,NUEVA,NO
+HAG8334,Diseño Computarizado IV,4M,Viernes,5,9,12,LAB6,30,COMPUTACION,30,NUEVA,NO
+SLC804,Citotecnología III,1M,Martes,2,2,3,N3-8,25,LABORATORIO,20,NUEVA,NO
+MPC1001,Pasantía II,1M-N,Martes,2,5,7,L3-4,60,SALON,8,NUEVA,NO
+EAC103,Metodología de la Investigación,1M,Martes,2,5,6,R3-6,45,SALON,1,SIN_DEMANDA,NO
+EAC106,Informática I,1M,Lunes,1,5,8,R3-5,45,SALON,2,SIN_DEMANDA,NO
+EAC203,Inglés II,1M,Martes,2,5,6,A3-6,65,SALON,5,SIN_DEMANDA,NO
+EAC302,Informática III,2M,Martes,2,9,12,N2-7,25,SALON,3,SIN_DEMANDA,NO
+ECP405,Legislación Laboral,1M,Jueves,4,1,3,R3-3,40,SALON,10,SIN_DEMANDA,NO
+ECS102,Inglés I,3M,Miércoles,3,1,3,E3-1,36,SALON,10,SIN_DEMANDA,NO
+ECS104,Ecología,3M,Miércoles,3,1,3,R3-9,40,SALON,10,SIN_DEMANDA,NO
+ECS107,Tecnicas de Investigación y Documentación,3M,Jueves,4,1,3,RPB-5,45,SALON,10,SIN_DEMANDA,NO
+ECS108,Formación Deportiva,1M,Miércoles,3,1,3,R1-8,45,SALON,10,SIN_DEMANDA,NO
+ECS910,Legislación y Libertad de Prensa (ELECTIVA),1M,Martes,2,8,10,R3-2,40,SALON,20,SIN_DEMANDA,NO
+EPS104,Inglés I,6T,Miércoles,3,5,7,A3-5,55,SALON,5,SIN_DEMANDA,NO
+EPS106,Estadística I,6T,Miércoles,3,1,4,R1-9,45,SALON,10,SIN_DEMANDA,NO
+EPS109,Técnicas de Investigación y Documentación,6T,Lunes,1,5,8,R3-6,45,SALON,10,SIN_DEMANDA,NO
+EPS203,Inglés II,6T,Jueves,4,1,3,A1-4,55,SALON,10,SIN_DEMANDA,NO
+IIE104,Actividades de Orientación,1M,Jueves,4,4,7,L3-6,60,SALON,50,SIN_DEMANDA,NO
+IIE105,Educación para la Salud Física y Deportiva,1M,Miércoles,3,6,7,A1-3,55,SALON,50,SIN_DEMANDA,NO
+IIE109,Desarrollo de Habilidades del Pensamiento I,1M,Viernes,5,5,8,A2-3,55,SALON,50,SIN_DEMANDA,NO
+IIE209,Desarrollo de Habilidades del Pensamiento II,1M,Lunes,1,1,3,R2-2,40,SALON,10,SIN_DEMANDA,NO
+IIE212,Álgebra Lineal,1M,Martes,2,1,2,E3-4,36,SALON,10,SIN_DEMANDA,NO
+IIE212,Álgebra Lineal,1M,Jueves,4,3,4,A3-6,65,SALON,10,SIN_DEMANDA,NO
+IIE213,Química General,1M,Jueves,4,1,4,E1-3,66,SALON,10,SIN_DEMANDA,NO
+IIE314,Inglés I,1M,Miércoles,3,1,4,E1-2,60,SALON,50,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-A,Miércoles,3,5,7,V1-3,55,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-B,Miércoles,3,2,4,R2-4,45,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-C,Jueves,4,2,4,L3-7,70,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-D,Jueves,4,5,7,RPB-5,45,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-E,Martes,2,1,3,L2-5,60,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-F,Martes,2,4,6,E2-4,65,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-G,Martes,2,7,9,R3-8,45,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-H,Miércoles,3,8,10,R1-7,45,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-I,Miércoles,3,11,13,S.AZUL,35,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-K,Martes,2,9,11,E3-1,36,SALON,10,SIN_DEMANDA,NO
+MPC101,Pasantía II,1M-L,Lunes,1,5,7,E3-7,30,SALON,10,SIN_DEMANDA,NO
+SLC401,Bioética,1,Jueves,4,10,13,E3-3,30,SALON,1,SIN_DEMANDA,NO
+SLC404,Anatomía Patológica General,1,Lunes,1,12,13,E3-3,30,SALON,4,SIN_DEMANDA,NO
+SLF103,Socio-Antropología,2501,Viernes,5,9,11,N2-6,40,SALON,40,SIN_DEMANDA,NO
+SLF207,Metodología de la Investigación I,2501,Martes,2,10,12,E3-5,36,SALON,35,SIN_DEMANDA,NO
+SLF503,Métodos de Evaluación II,2T,Lunes,1,9,13,N3-1,16,SALON_CAMILLAS,55,SIN_DEMANDA,SI
+SLF808,Fisioterapia Dermatofuncional,2M,Viernes,5,3,5,V1-2,55,SALON,48,SIN_DEMANDA,NO
+SLH210,Embriología Humana,1,Lunes,1,2,5,R3-8,45,SALON,6,SIN_DEMANDA,NO
+SLH302,Bioestadística,1,Miércoles,3,8,9,R2-3,45,SALON,1,SIN_DEMANDA,NO
+SLH302,Bioestadística,1,Jueves,4,6,8,R2-9,40,SALON,1,SIN_DEMANDA,NO
+SLH501,Histología I,1,Miércoles,3,10,12,R1-4,45,SALON,5,SIN_DEMANDA,NO
+SLH501,Histología I,1,Jueves,4,5,6,L2-3,60,SALON,5,SIN_DEMANDA,NO
+SLH503,Histoquímica,1,Martes,2,7,9,RPB-3,45,SALON,5,SIN_DEMANDA,NO
+SLH503,Histoquímica,1,Jueves,4,7,10,VPB-1,40,SALON,5,SIN_DEMANDA,NO
+SLH505,Administración de Servicios,1,Lunes,1,4,4,R1-1,40,SALON,5,SIN_DEMANDA,NO
+SLH702,Histoinmunología II,1,Lunes,1,6,8,R3-8,45,SALON,8,SIN_DEMANDA,NO
+STI505,Radiología Odontológica,1T,Viernes,5,3,5,R2-4,45,SALON,10,SIN_DEMANDA,NO
+ECP205,Problemática Socioeconómica,1M,Martes,,1,4,SIN_ASIGNAR,,SALON,1,SIN_DEMANDA,SI
+ECS408,Radio,1M,Martes,,3,5,SIN_ASIGNAR,,SALON,10,SIN_DEMANDA,SI
+EPS110,Historia de Psicología,6T,Martes,,2,4,SIN_ASIGNAR,,SALON,5,SIN_DEMANDA,SI
+SLC103,Inglés Instrumental I,2501,Martes,,2,4,SIN_ASIGNAR,,SALON,1,SIN_DEMANDA,SI
+SLC301,Biología Molecular,2501,Martes,,2,7,SIN_ASIGNAR,,SALON,1,SIN_DEMANDA,SI
+STI101,Física Básica,1M,Jueves,,4,7,SIN_ASIGNAR,,SALON,20,SIN_DEMANDA,SI

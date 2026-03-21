@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Asignación de Aulas - UAM</title>
+    <title>Sistema de Asignación de Aulas - UAM (v2)</title>
     <style>
         * {
             margin: 0;
@@ -627,13 +627,22 @@
         </div>
 
         <div class="controls">
+            <!-- Mode selector -->
+            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+                <label style="font-weight:bold; margin-right:5px;">Modo de trabajo:</label>
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; padding:8px 16px; border-radius:6px; border:2px solid #ccc; transition:all 0.2s;" id="modoAjusteLabel">
+                    <input type="radio" name="modoTrabajo" value="ajuste" checked onchange="cambiarModoTrabajo()"> Ajuste Operativo
+                </label>
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; padding:8px 16px; border-radius:6px; border:2px solid #ccc; transition:all 0.2s;" id="modoPlanificacionLabel">
+                    <input type="radio" name="modoTrabajo" value="planificacion" onchange="cambiarModoTrabajo()"> Planificación
+                </label>
+                <span id="modoDescripcion" style="font-size:13px; color:#666; margin-left:10px;">Trabajando con inscritos reales del período actual</span>
+            </div>
             <div class="control-grid">
                 <div class="control-group">
                     <label for="periodo">Período Académico</label>
                     <select id="periodo">
-                        <option value="20253">2025-3 (Intensivo Actual)</option>
-                        <option value="20252">2025-2</option>
-                        <option value="20251">2025-1</option>
+                        <option value="">Cargando períodos...</option>
                     </select>
                 </div>
                 <div class="control-group">
@@ -644,13 +653,10 @@
                         <option value="2">Centro Histórico de Valencia</option>
                     </select>
                 </div>
-                <div class="control-group">
+                <div class="control-group" id="referenciaGroup" style="display:none;">
                     <label for="periodoReferencia">Periodo Referencia (Inscritos)</label>
                     <select id="periodoReferencia">
-                        <option value="">Sin referencia</option>
-                        <option value="20253">2025-3 (Intensivo Actual)</option>
-                        <option value="20252">2025-2</option>
-                        <option value="20251">2025-1</option>
+                        <option value="">Seleccione referencia...</option>
                     </select>
                 </div>
                 <div class="control-group">
@@ -742,6 +748,9 @@
                 </button>
                 <button class="tab" onclick="switchTab('planning')" id="planningTab">
                     📋 Planificación
+                </button>
+                <button class="tab" onclick="switchTab('comparar-periodos')" id="compararPeriodosTab" style="display:none;">
+                    🔄 Comparar Periodos
                 </button>
             </div>
 
@@ -891,7 +900,7 @@
                         <div>
                             <label for="availTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
                             <select id="availTipoAula" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="Salon">Salon</option>
+                                <option value="SALON">SALON</option>
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
@@ -1011,7 +1020,7 @@
                         <div>
                             <label for="searchTipoAula" style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Aula:</label>
                             <select id="searchTipoAula" class="control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="Salon">Salon</option>
+                                <option value="SALON">SALON</option>
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
@@ -1084,7 +1093,7 @@
                 <h2>🚨 Secciones Sin Aula Asignada</h2>
 
                 <div class="info-box" style="margin-bottom: 20px;">
-                    <p>Este reporte muestra todas las secciones con estudiantes inscritos que tienen bloques horarios asignados pero <strong>no tienen aula asignada</strong>.</p>
+                    <p>Este reporte muestra todas las secciones con bloques horarios asignados pero <strong>no tienen aula asignada</strong>. En modo planificación incluye todas las secciones con cupo > 0 (aunque aún no tengan inscritos).</p>
                 </div>
 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1258,6 +1267,26 @@
                 </button>
             </div>
 
+            <div id="comparar-periodos" class="tab-content">
+                <h2>🔄 Comparación entre Periodos</h2>
+                <div id="comparacionNotReady" class="info-box">
+                    <p>Cargue datos con un periodo de referencia seleccionado para ver la comparación.</p>
+                </div>
+                <div id="comparacionContent" style="display:none;">
+                    <div id="comparacionStats" style="margin-bottom: 20px;"></div>
+                    <div id="comparacionFiltros" style="margin-bottom: 15px;">
+                        <label><strong>Filtrar:</strong></label>
+                        <button class="btn btn-sm" onclick="filtrarComparacion('todas')" style="margin-left:5px;">Todas</button>
+                        <button class="btn btn-sm btn-success" onclick="filtrarComparacion('nuevas')" style="margin-left:5px;">Nuevas</button>
+                        <button class="btn btn-sm btn-danger" onclick="filtrarComparacion('eliminadas')" style="margin-left:5px;">Eliminadas</button>
+                        <button class="btn btn-sm" onclick="filtrarComparacion('cerradas')" style="margin-left:5px; background:#6f42c1; color:white;">Cerradas</button>
+                        <button class="btn btn-sm btn-warning" onclick="filtrarComparacion('modificadas')" style="margin-left:5px;">Modificadas</button>
+                        <button class="btn btn-sm btn-info" onclick="filtrarComparacion('sinCambios')" style="margin-left:5px;">Sin cambios</button>
+                    </div>
+                    <div id="comparacionResultado"></div>
+                </div>
+            </div>
+
             <div id="planning" class="tab-content">
                 <h2>📋 Planificación - Reporte de Cambios</h2>
                 <div id="planningBanner" class="info-box" style="display:none;">
@@ -1273,8 +1302,8 @@
                         <button class="btn btn-success" onclick="savePlanningSession()">
                             💾 Guardar Sesión
                         </button>
-                        <button class="btn btn-primary" onclick="exportPlanningSQL()" style="margin-left: 10px;">
-                            📤 Exportar SQL
+                        <button class="btn btn-primary" onclick="exportPlanningChecklist()" style="margin-left: 10px;">
+                            📋 Exportar Checklist
                         </button>
                         <button class="btn btn-warning" onclick="exportPlanningJSON()" style="margin-left: 10px;">
                             📥 Exportar JSON
@@ -1315,6 +1344,34 @@
         let originalData = null;    // Immutable snapshot of loaded data
         let referenciaData = null;  // Previous period data (for enrollment reference)
         let planningMode = false;
+        let modoTrabajo = 'ajuste'; // 'ajuste' or 'planificacion'
+
+        function cambiarModoTrabajo() {
+            modoTrabajo = document.querySelector('input[name="modoTrabajo"]:checked').value;
+            const refGroup = document.getElementById('referenciaGroup');
+            const desc = document.getElementById('modoDescripcion');
+            const labelAjuste = document.getElementById('modoAjusteLabel');
+            const labelPlanif = document.getElementById('modoPlanificacionLabel');
+
+            if (modoTrabajo === 'planificacion') {
+                refGroup.style.display = '';
+                desc.textContent = 'Pre-inscripción: usando proyecciones del período de referencia';
+                desc.style.color = '#856404';
+                labelPlanif.style.borderColor = '#667eea';
+                labelPlanif.style.background = '#f0f0ff';
+                labelAjuste.style.borderColor = '#ccc';
+                labelAjuste.style.background = '';
+            } else {
+                refGroup.style.display = 'none';
+                document.getElementById('periodoReferencia').value = '';
+                desc.textContent = 'Trabajando con inscritos reales del período actual';
+                desc.style.color = '#155724';
+                labelAjuste.style.borderColor = '#28a745';
+                labelAjuste.style.background = '#f0fff0';
+                labelPlanif.style.borderColor = '#ccc';
+                labelPlanif.style.background = '';
+            }
+        }
 
         // Materias equivalentes (loaded from server)
         let materiasEquivalentesMap = new Map();
@@ -1374,7 +1431,7 @@
                             const option = document.createElement('option');
                             option.value = tipo;
                             option.textContent = tipo;
-                            if (tipo === 'Salon') {
+                            if (tipo === 'SALON') {
                                 option.selected = true;
                             }
                             searchTipoSelect.appendChild(option);
@@ -1389,7 +1446,7 @@
                             const option = document.createElement('option');
                             option.value = tipo;
                             option.textContent = tipo;
-                            if (tipo === 'Salon') {
+                            if (tipo === 'SALON') {
                                 option.selected = true;
                             }
                             availTipoSelect.appendChild(option);
@@ -1449,9 +1506,40 @@
             initializeApp();
         });
 
-        function initializeApp() {
+        async function cargarPeriodos() {
+            try {
+                const response = await fetch('/api/periodos');
+                const periodos = await response.json();
+                const selectPeriodo = document.getElementById('periodo');
+                const selectRef = document.getElementById('periodoReferencia');
+
+                selectPeriodo.innerHTML = '';
+                // Keep the default option for reference
+                selectRef.innerHTML = '<option value="">Seleccione referencia...</option>';
+
+                periodos.forEach((cod, index) => {
+                    const year = cod.substring(0, 4);
+                    const num = cod.substring(4);
+                    const label = `${year}-${num}`;
+                    const option = `<option value="${cod}"${index === 0 ? ' selected' : ''}>${label}</option>`;
+                    selectPeriodo.insertAdjacentHTML('beforeend', option);
+                    selectRef.insertAdjacentHTML('beforeend', `<option value="${cod}">${label}</option>`);
+                });
+
+                if (periodos.length === 0) {
+                    selectPeriodo.innerHTML = '<option value="">No hay períodos disponibles</option>';
+                }
+            } catch (error) {
+                console.error('Error cargando períodos:', error);
+                document.getElementById('periodo').innerHTML = '<option value="">Error al cargar períodos</option>';
+            }
+        }
+
+        async function initializeApp() {
             console.log('Sistema de Asignación de Aulas iniciado');
-            cargarMateriasEquivalentes();
+            cambiarModoTrabajo(); // Apply initial mode styling
+            cargarPeriodos();
+            await cargarMateriasEquivalentes();
             cargarTiposAula();
             loadInitialData();
             // Try to restore a saved planning session
@@ -1602,7 +1690,14 @@
                                 codigo: item.CodAsignatura,
                                 seccion: item.Secc,
                                 inscritos: item.Inscritos,
-                                cupo: item.Cupo
+                                cupo: item.Cupo,
+                                horario1: item.Horario1,
+                                horario2: item.Horario2,
+                                horario3: item.Horario3,
+                                horario4: item.Horario4,
+                                horario5: item.Horario5,
+                                horario6: item.Horario6,
+                                horario7: item.Horario7
                             }));
                             // Cross-reference: copy inscritos from reference to current sections
                             currentData.oferta.forEach(seccion => {
@@ -1624,33 +1719,45 @@
                     }
                 }
 
-                // Snapshot for planning mode
-                originalData = {
-                    oferta: JSON.parse(JSON.stringify(currentData.oferta)),
-                    aulas: JSON.parse(JSON.stringify(currentData.aulas)),
-                    periodo: periodo,
-                    periodoReferencia: periodoRef || null,
-                    sede: sede,
-                    loadedAt: new Date().toISOString()
-                };
-                planningMode = true;
-                currentData.pendingChanges = [];
+                // Planning mode activates when mode is 'planificacion' AND reference period is loaded
+                if (modoTrabajo === 'planificacion' && referenciaData) {
+                    originalData = {
+                        oferta: JSON.parse(JSON.stringify(currentData.oferta)),
+                        aulas: JSON.parse(JSON.stringify(currentData.aulas)),
+                        periodo: periodo,
+                        periodoReferencia: periodoRef || null,
+                        sede: sede,
+                        loadedAt: new Date().toISOString()
+                    };
+                    planningMode = true;
+                    currentData.pendingChanges = [];
 
-                // Run local conflict detection
-                detectLocalConflicts();
-                updatePlanningModeUI();
+                    // Run local conflict detection
+                    await detectLocalConflicts();
+                    updatePlanningModeUI();
+                } else if (modoTrabajo === 'planificacion' && !referenciaData) {
+                    planningMode = false;
+                    originalData = null;
+                    showMessage('error', 'Modo Planificación requiere un período de referencia. Selecciónelo e intente de nuevo.');
+                    hideLoading();
+                    return;
+                } else {
+                    planningMode = false;
+                    originalData = null;
+                }
 
                 // Populate classroom selector
                 populateAulaSelector();
-                // populateScheduleGrid(); // No longer needed with new visualization
                 updateStatistics();
                 hideLoading();
 
                 let msg = `Datos cargados: ${currentData.oferta.length} secciones, ${currentData.aulas.length} aulas`;
-                if (referenciaData) {
+                if (modoTrabajo === 'planificacion' && referenciaData) {
                     msg += ` | Referencia: ${referenciaData.length} secciones del periodo ${periodoRef}`;
+                    msg += ' | 📋 Modo Planificación activo';
+                } else {
+                    msg += ' | 🔧 Modo Ajuste Operativo — usando inscritos reales';
                 }
-                msg += ' | Modo planificación activo';
                 showMessage('success', msg);
 
             } catch (error) {
@@ -1923,11 +2030,13 @@
                 schedule[block] = { 1: null, 2: null, 3: null, 4: null, 5: null };
             }
 
-            // Find all sections using this classroom - ONLY WITH STUDENTS
+            // Find all sections using this classroom
             currentData.oferta.forEach(section => {
-                // SKIP sections with 0 enrolled students (not in operation)
-                if (!section.inscritos || section.inscritos === 0) {
-                    return;
+                // In planning mode, use cupo > 0; in normal mode, use inscritos > 0
+                if (planningMode) {
+                    if (!section.cupo || section.cupo === 0) return;
+                } else {
+                    if (!section.inscritos || section.inscritos === 0) return;
                 }
 
                 // Check each day (Monday to Friday only: 1-5)
@@ -1936,8 +2045,8 @@
                     const horario = section[horarioField];
 
                     if (horario) {
-                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2"
-                        const slots = horario.split(',');
+                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2" (semicolons also valid)
+                        const slots = horario.split(/[,;]/);
                         slots.forEach(slot => {
                             if (slot.includes(':')) {
                                 const [bloques, aula_slot] = slot.split(':');
@@ -2041,27 +2150,68 @@
             showMessage('success', `Horario del aula ${aulaCode} generado correctamente`);
         }
 
-        function verHorarioDesdeResultados(aulaCode) {
+        async function verHorarioDesdeResultados(aulaCode) {
             if (!aulaCode) {
                 showMessage('error', 'Código de aula no válido');
                 return;
             }
 
-            if (currentData.oferta.length === 0) {
-                showMessage('error', 'Por favor cargue los datos primero');
+            const periodo = document.getElementById('periodo').value;
+            if (!periodo) {
+                showMessage('error', 'Por favor seleccione un periodo');
                 return;
             }
 
-            // Find classroom info
-            const aula = currentData.aulas.find(a => a.codigo === aulaCode);
-            if (!aula) {
-                showMessage('error', 'Aula no encontrada');
-                return;
+            // Use loaded data if available, otherwise fetch from API
+            let oferta = currentData.oferta;
+            let aulaInfo = currentData.aulas.find(a => a.codigo === aulaCode);
+
+            if (oferta.length === 0) {
+                try {
+                    showLoading();
+                    const sede = document.getElementById('searchSede').value;
+                    let url = `/api/oferta/${periodo}`;
+                    if (sede) url += `?sede=${sede}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Error al obtener oferta');
+                    const data = await response.json();
+                    oferta = data.map(item => ({
+                        codigo: item.CodAsignatura,
+                        nombre: item.NombreAsignatura,
+                        seccion: item.Secc,
+                        sede: item.CodSede,
+                        cupo: item.Cupo,
+                        inscritos: item.Inscritos,
+                        profesor: item.Profesor,
+                        horario1: item.Horario1, horario2: item.Horario2, horario3: item.Horario3,
+                        horario4: item.Horario4, horario5: item.Horario5, horario6: item.Horario6, horario7: item.Horario7
+                    }));
+                    hideLoading();
+                } catch (error) {
+                    hideLoading();
+                    showMessage('error', 'Error al obtener datos de oferta: ' + error.message);
+                    return;
+                }
+            }
+
+            if (!aulaInfo) {
+                // Try to get aula info from API
+                try {
+                    const sede = document.getElementById('searchSede').value;
+                    const response = await fetch(`/api/aulas?sede=${sede}`);
+                    if (response.ok) {
+                        const aulasData = await response.json();
+                        const found = aulasData.find(a => a.CodAula === aulaCode);
+                        if (found) {
+                            aulaInfo = { codigo: found.CodAula, nombre: found.NombreAula, capacidad: found.Capacidad };
+                        }
+                    }
+                } catch (e) { /* ignore */ }
             }
 
             // Update title
             const aulaTitle = document.getElementById('searchAulaTitle');
-            aulaTitle.textContent = `Horario Semanal del Aula: ${aula.codigo} - ${aula.nombre || ''} (Capacidad: ${aula.capacidad || 'N/A'})`;
+            aulaTitle.textContent = `Horario Semanal del Aula: ${aulaCode}${aulaInfo ? ` - ${aulaInfo.nombre || ''} (Capacidad: ${aulaInfo.capacidad || 'N/A'})` : ''}`;
 
             // Block times definition
             const blockTimes = [
@@ -2078,21 +2228,18 @@
                 schedule[block] = { 1: null, 2: null, 3: null, 4: null, 5: null };
             }
 
-            // Find all sections using this classroom - ONLY WITH STUDENTS
-            currentData.oferta.forEach(section => {
-                // SKIP sections with 0 enrolled students (not in operation)
-                if (!section.inscritos || section.inscritos === 0) {
-                    return;
-                }
-
+            // Find all sections using this classroom
+            // Show ALL sections that have this aula assigned (regardless of inscritos)
+            // because an assigned aula is occupied whether students are enrolled or not
+            oferta.forEach(section => {
                 // Check each day (Monday to Friday only: 1-5)
                 for (let dia = 1; dia <= 5; dia++) {
                     const horarioField = `horario${dia}`;
                     const horario = section[horarioField];
 
                     if (horario) {
-                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2"
-                        const slots = horario.split(',');
+                        // Parse schedule format: "5-6:V1-1" or "5-6:V1-1,7-8:V1-2" (semicolons also valid)
+                        const slots = horario.split(/[,;]/);
                         slots.forEach(slot => {
                             if (slot.includes(':')) {
                                 const [bloques, aula_slot] = slot.split(':');
@@ -2125,8 +2272,8 @@
                                                     nombre: existingCell.nombre.length > section.nombre.length ? existingCell.nombre : section.nombre,
                                                     seccion: `${existingCell.seccion} + ${section.seccion}`,
                                                     profesor: existingCell.profesor === section.profesor ? existingCell.profesor : `${existingCell.profesor} / ${section.profesor}`,
-                                                    inscritos: existingCell.inscritos + section.inscritos, // SUM STUDENTS
-                                                    cupo: existingCell.cupo + section.cupo,
+                                                    inscritos: (existingCell.inscritos || 0) + (section.inscritos || 0),
+                                                    cupo: (existingCell.cupo || 0) + (section.cupo || 0),
                                                     bloques: `${startBlock}-${endBlock}`,
                                                     isEquivalent: areEquivalent,
                                                     isCollision: !areEquivalent // TRUE if NOT equivalent
@@ -2137,8 +2284,8 @@
                                                     nombre: section.nombre,
                                                     seccion: section.seccion,
                                                     profesor: section.profesor,
-                                                    inscritos: section.inscritos,
-                                                    cupo: section.cupo,
+                                                    inscritos: section.inscritos || 0,
+                                                    cupo: section.cupo || 0,
                                                     bloques: `${startBlock}-${endBlock}`,
                                                     isCollision: false
                                                 };
@@ -2212,12 +2359,17 @@
 
             // In planning mode, use local detection (works on edited data)
             if (planningMode && currentData.oferta.length > 0) {
-                detectLocalConflicts();
+                await detectLocalConflicts();
                 displayConflicts();
                 hideLoading();
 
                 if (currentData.conflicts.length > 0) {
-                    showMessage('error', `Se detectaron ${currentData.conflicts.length} conflictos (detección local)`);
+                    const reales = currentData.conflicts.filter(c => !c.probablementeNoReal).length;
+                    const noReales = currentData.conflicts.filter(c => c.probablementeNoReal).length;
+                    let msg = `Se detectaron ${currentData.conflicts.length} conflictos`;
+                    if (noReales > 0) msg += ` (${reales} reales, ${noReales} prob. no reales)`;
+                    msg += ' (detección local)';
+                    showMessage(reales > 0 ? 'error' : 'warning', msg);
                 } else {
                     showMessage('success', 'No se detectaron conflictos');
                 }
@@ -2244,10 +2396,7 @@
                 // El servidor ya devuelve el formato correcto con todos los campos necesarios
                 currentData.conflicts = conflictsData;
 
-                console.log(`Conflictos cargados: ${conflictsData.length}`);
-                if (conflictsData.length > 0) {
-                    console.log('Ejemplo de conflicto:', conflictsData[0]);
-                }
+                console.log('Conflictos del servidor:', conflictsData.length);
 
                 displayConflicts();
                 hideLoading();
@@ -2279,9 +2428,10 @@
 
             try {
                 let url = `/api/secciones-sin-aula/${periodo}`;
-                if (sede) {
-                    url += `?sede=${sede}`;
-                }
+                const params = [];
+                if (sede) params.push(`sede=${sede}`);
+                if (planningMode) params.push('modo=planificacion');
+                if (params.length > 0) url += '?' + params.join('&');
 
                 const response = await fetch(url);
 
@@ -2294,6 +2444,26 @@
                 console.log(`Secciones sin aula: ${data.total}`);
                 if (data.secciones.length > 0) {
                     console.log('Ejemplo:', data.secciones[0]);
+                }
+
+                // Fetch room types for all subjects
+                if (data.secciones && data.secciones.length > 0) {
+                    const asignaturasUnicas = [...new Set(data.secciones.map(s => s.CodAsignatura))];
+                    try {
+                        const sede = document.getElementById('sede').value;
+                        const tipoResp = await fetch('/api/tipo-aula-historico/lote', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ asignaturas: asignaturasUnicas, sede: sede || undefined })
+                        });
+                        if (tipoResp.ok) {
+                            const tipoData = await tipoResp.json();
+                            data.secciones.forEach(s => {
+                                const info = tipoData.resultados[s.CodAsignatura];
+                                s._tipoAulaRecomendado = info ? info.tipoRecomendado : null;
+                            });
+                        }
+                    } catch (e) { console.error('Error obteniendo tipos de aula:', e); }
                 }
 
                 displaySeccionesSinAula(data);
@@ -2319,26 +2489,113 @@
                 resultsDiv.innerHTML = `
                     <div class="success-box" style="text-align: center; padding: 40px;">
                         <h3 style="color: #28a745; margin-bottom: 10px;">✓ Excelente</h3>
-                        <p style="font-size: 18px;">Todas las secciones con estudiantes inscritos tienen aula asignada.</p>
+                        <p style="font-size: 18px;">Todas las secciones ${planningMode ? 'con cupo' : 'con estudiantes inscritos'} tienen aula asignada.</p>
                     </div>
                 `;
                 return;
             }
 
-            let html = `
-                <div class="alert-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                    <strong>⚠️ Total de secciones sin aula:</strong> ${data.total}
-                </div>
+            // In planning mode, classify sections using reference data
+            let seccionesReales = data.secciones;
+            let seccionesProbableFalso = [];
 
+            if (planningMode && referenciaData) {
+                const refMap = new Map();
+                referenciaData.forEach(r => refMap.set(`${r.codigo}-${r.seccion}`, r));
+
+                seccionesReales = [];
+                seccionesProbableFalso = [];
+
+                data.secciones.forEach(seccion => {
+                    const key = `${seccion.CodAsignatura}-${seccion.Seccion}`;
+                    const ref = refMap.get(key);
+
+                    if (ref && (!ref.inscritos || ref.inscritos <= 0)) {
+                        // Existed in reference but had 0 inscritos → probably not real
+                        seccion._motivo = 'Sin inscritos en referencia';
+                        seccion._inscritosRef = 0;
+                        seccionesProbableFalso.push(seccion);
+                    } else {
+                        // New section or had inscritos in reference → real
+                        seccion._esNueva = !ref;
+                        seccion._inscritosRef = ref ? ref.inscritos : null;
+                        seccionesReales.push(seccion);
+                    }
+                });
+            }
+
+            let html = '';
+
+            // Stats
+            if (planningMode && referenciaData) {
+                html += `
+                    <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+                        <div style="flex:1; min-width:200px; padding:15px; background:#f8d7da; border-radius:6px; text-align:center;">
+                            <div style="font-size:24px; font-weight:bold;">${seccionesReales.length}</div>
+                            <div>Secciones sin aula</div>
+                        </div>
+                        <div style="flex:1; min-width:200px; padding:15px; background:#e2e3e5; border-radius:6px; text-align:center;">
+                            <div style="font-size:24px; font-weight:bold;">${seccionesProbableFalso.length}</div>
+                            <div>Probables falsos positivos</div>
+                            <small style="color:#666;">Existían en referencia sin inscritos</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="alert-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                        <strong>⚠️ Total de secciones sin aula:</strong> ${data.total}
+                    </div>
+                `;
+            }
+
+            // Real sections table
+            if (seccionesReales.length > 0) {
+                html += renderTablaSinAula(seccionesReales, planningMode && referenciaData);
+            }
+
+            // Probable false positives (collapsed)
+            if (seccionesProbableFalso.length > 0) {
+                html += `
+                    <details style="margin-top:20px;">
+                        <summary style="cursor:pointer; padding:10px; background:#e2e3e5; border-radius:6px; font-weight:bold;">
+                            Probables falsos positivos (${seccionesProbableFalso.length}) — Secciones que existían en la referencia sin inscritos
+                        </summary>
+                        <div style="margin-top:10px;">
+                            ${renderTablaSinAula(seccionesProbableFalso, true)}
+                        </div>
+                    </details>
+                `;
+            }
+
+            html += `
+                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px;">💡 Recomendaciones</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Prioriza asignar aulas a las secciones con más estudiantes ${planningMode ? '(proyectados desde referencia)' : 'inscritos'}</li>
+                        <li>Verifica la capacidad requerida antes de asignar un aula</li>
+                        <li>Usa la pestaña "Buscador de Aulas" para buscar aulas libres</li>
+                        <li>Revisa si hay conflictos antes de confirmar asignaciones</li>
+                    </ul>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function renderTablaSinAula(secciones, showRefInfo) {
+            let html = `
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                ${showRefInfo ? '<th>Estado</th>' : ''}
                                 <th>Código</th>
                                 <th>Asignatura</th>
                                 <th>Sección</th>
-                                <th>Inscritos</th>
+                                ${showRefInfo ? '<th>Insc. Ref</th>' : '<th>Inscritos</th>'}
                                 <th>Cupo</th>
+                                <th>Tipo Aula</th>
                                 <th>Profesor</th>
                                 <th>Sede</th>
                                 <th>Bloques Sin Aula</th>
@@ -2347,22 +2604,44 @@
                         <tbody>
             `;
 
-            data.secciones.forEach(seccion => {
+            secciones.forEach(seccion => {
                 const bloquesHTML = seccion.BloquesSinAula.map(bloque =>
                     `<div style="margin-bottom: 5px; padding: 5px; background: #f8f9fa; border-radius: 3px;">
                         <strong>${bloque.Dia}:</strong> Bloques ${bloque.Bloques}
                     </div>`
                 ).join('');
 
-                const ocupacionPct = ((seccion.Inscritos / seccion.Cupo) * 100).toFixed(0);
+                let estadoHTML = '';
+                if (showRefInfo) {
+                    if (seccion._esNueva) {
+                        estadoHTML = '<td><span style="color:#28a745; font-weight:bold;">NUEVA</span></td>';
+                    } else if (seccion._motivo) {
+                        estadoHTML = '<td><span style="color:#999; font-weight:bold;">SIN DEMANDA</span></td>';
+                    } else {
+                        estadoHTML = '<td><span style="color:#856404; font-weight:bold;">EXISTENTE</span></td>';
+                    }
+                }
+
+                const inscDisplay = showRefInfo
+                    ? (seccion._inscritosRef !== null ? seccion._inscritosRef : '—')
+                    : seccion.Inscritos;
+
+                const tipoAula = seccion._tipoAulaRecomendado || 'SALON';
+                const tipoColors = {
+                    'SALON': '#6c757d', 'LABORATORIO': '#dc3545', 'COMPUTACION': '#0d6efd',
+                    'SALON_CAMILLAS': '#e85d04', 'SALA_DIBUJO': '#6f42c1', 'SALON_POSTGRADO': '#20c997'
+                };
+                const tipoColor = tipoColors[tipoAula] || '#6c757d';
 
                 html += `
                     <tr>
+                        ${estadoHTML}
                         <td><strong>${seccion.CodAsignatura}</strong></td>
                         <td>${seccion.NombreAsignatura}</td>
-                        <td><span class="badge badge-warning">${seccion.Seccion}</span></td>
-                        <td style="text-align: center;"><strong>${seccion.Inscritos}</strong></td>
-                        <td style="text-align: center;">${seccion.Cupo} <small>(${ocupacionPct}%)</small></td>
+                        <td style="text-align:center;">${seccion.Seccion}</td>
+                        <td style="text-align: center;"><strong>${inscDisplay}</strong></td>
+                        <td style="text-align: center;">${seccion.Cupo}</td>
+                        <td style="text-align: center;"><span style="background:${tipoColor}; color:white; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">${tipoAula}</span></td>
                         <td>${seccion.Profesor || 'Sin asignar'}</td>
                         <td>${seccion.NombreSede}</td>
                         <td>${bloquesHTML}</td>
@@ -2370,23 +2649,8 @@
                 `;
             });
 
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
-                    <h4 style="margin-bottom: 10px;">💡 Recomendaciones</h4>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>Prioriza asignar aulas a las secciones con más estudiantes inscritos</li>
-                        <li>Verifica la capacidad requerida antes de asignar un aula</li>
-                        <li>Usa la pestaña "Disponibilidad de Aulas" para buscar aulas libres</li>
-                        <li>Revisa si hay conflictos antes de confirmar asignaciones</li>
-                    </ul>
-                </div>
-            `;
-
-            resultsDiv.innerHTML = html;
+            html += '</tbody></table></div>';
+            return html;
         }
 
         function optimizeSuggestions() {
@@ -2785,17 +3049,23 @@
             };
         }
 
-        function detectLocalConflicts() {
+        async function detectLocalConflicts() {
+            // Ensure equivalences are loaded before detecting conflicts
+            if (materiasEquivalentesMap.size === 0) {
+                await cargarMateriasEquivalentes();
+            }
             const conflicts = [];
             const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-            // Get all sections that have any schedule assigned
+            // Get all sections that have any schedule assigned AND have inscritos > 0
             const secciones = currentData.oferta.filter(s => {
+                if (!s.inscritos || s.inscritos <= 0) return false;
                 for (let d = 1; d <= 7; d++) {
                     if (s[`horario${d}`]) return true;
                 }
                 return false;
             });
+            console.log(`detectLocalConflicts: ${secciones.length} secciones con inscritos y horario (de ${currentData.oferta.length} totales), equivalencias: ${materiasEquivalentesMap.size}`);
 
             // Detect schedule conflicts (same aula, overlapping blocks)
             for (let i = 0; i < secciones.length; i++) {
@@ -2822,20 +3092,28 @@
                                     if (!(end1 < start2 || end2 < start1)) {
                                         // Check equivalences
                                         if (!sonMateriasEquivalentes(sec1.codigo, sec2.codigo)) {
+                                            const inscRef1 = sec1.inscritosReferencia;
+                                            const inscRef2 = sec2.inscritosReferencia;
+                                            // A conflict is "probably not real" if either section had 0 inscritos in the reference period
+                                            const hasRef = inscRef1 !== undefined || inscRef2 !== undefined;
+                                            const secSinInscritosRef = hasRef && (inscRef1 === 0 || inscRef2 === 0);
                                             conflicts.push({
                                                 type: 'schedule_conflict',
                                                 CodAsignatura1: sec1.codigo,
                                                 Asignatura1: sec1.nombre,
                                                 Seccion1: sec1.seccion,
                                                 Inscritos1: sec1.inscritos,
+                                                InscritosRef1: inscRef1,
                                                 CodAsignatura2: sec2.codigo,
                                                 Asignatura2: sec2.nombre,
                                                 Seccion2: sec2.seccion,
                                                 Inscritos2: sec2.inscritos,
+                                                InscritosRef2: inscRef2,
                                                 Aula: s1.aula,
                                                 Dia: diasNombres[dia],
                                                 Bloques1: s1.blocks,
-                                                Bloques2: s2.blocks
+                                                Bloques2: s2.blocks,
+                                                probablementeNoReal: secSinInscritosRef
                                             });
                                         }
                                     }
@@ -2874,13 +3152,16 @@
                 }
             });
 
+            const schedCount = conflicts.filter(c => c.type === 'schedule_conflict').length;
+            const capCount = conflicts.filter(c => c.type === 'capacity_exceeded').length;
+            console.log(`detectLocalConflicts: ${schedCount} conflictos de horario, ${capCount} de capacidad`);
             currentData.conflicts = conflicts;
             return conflicts;
         }
 
         // Keep old name as alias for compatibility
-        function findScheduleConflicts() {
-            return detectLocalConflicts();
+        async function findScheduleConflicts() {
+            return await detectLocalConflicts();
         }
 
         function schedulesOverlap(schedule1, schedule2) {
@@ -2906,7 +3187,7 @@
             }
 
             const slots = [];
-            const parts = schedule.split(',');
+            const parts = schedule.split(/[,;]/);
             parts.forEach(part => {
                 if (part && part.includes(':')) {
                     const segments = part.split(':');
@@ -3192,7 +3473,7 @@
             modal.style.display = 'block';
         }
 
-        function applyReassignment(codigo, seccion) {
+        async function applyReassignment(codigo, seccion) {
             const section = currentData.oferta.find(
                 s => s.codigo === codigo && s.seccion === seccion
             );
@@ -3244,7 +3525,7 @@
             if (changes.length > 0) {
                 currentData.pendingChanges.push(...changes);
                 updatePendingChanges();
-                detectLocalConflicts();
+                await detectLocalConflicts();
                 updatePlanningModeUI();
                 showMessage('success', `${changes.length} cambio(s) aplicado(s) a ${codigo}-${seccion}`);
             } else {
@@ -3321,7 +3602,7 @@
                         const horario = section[horarioField];
 
                         if (horario) {
-                            const slots = horario.split(',');
+                            const slots = horario.split(/[,;]/);
                             slots.forEach(slot => {
                                 if (slot.includes(':')) {
                                     const [bloques, aula] = slot.split(':');
@@ -3527,18 +3808,27 @@
         function displayConflicts() {
             const conflictsDiv = document.getElementById('conflictsList');
 
-            if (currentData.conflicts.length === 0) {
+            // Separate by type
+            const scheduleConflicts = currentData.conflicts.filter(c => c.type === 'schedule_conflict' || (!c.type && c.CodAsignatura2));
+            const capacityConflicts = currentData.conflicts.filter(c => c.type === 'capacity_exceeded');
+
+            if (scheduleConflicts.length === 0 && capacityConflicts.length === 0) {
                 conflictsDiv.innerHTML = '<div class="success-message">✅ No se detectaron conflictos en la asignación actual.</div>';
             } else {
-                let html = `<div class="error-message">⚠️ Se detectaron ${currentData.conflicts.length} conflicto(s) de horario</div>`;
+                // Segregate schedule conflicts: real vs probably not real
+                const conflictosReales = scheduleConflicts.filter(c => !c.probablementeNoReal);
+                const conflictosNoReales = scheduleConflicts.filter(c => c.probablementeNoReal);
 
-                // Debug: mostrar primer conflicto en consola
-                if (currentData.conflicts.length > 0) {
-                    console.log('Primer conflicto:', currentData.conflicts[0]);
+                let html = '';
+                if (scheduleConflicts.length > 0) {
+                    html += `<div class="error-message">⚠️ Se detectaron ${scheduleConflicts.length} conflicto(s) de horario`;
+                    if (conflictosNoReales.length > 0) {
+                        html += ` (${conflictosReales.length} reales, ${conflictosNoReales.length} probablemente no reales)`;
+                    }
+                    html += `</div>`;
                 }
 
-                currentData.conflicts.forEach((conflict, index) => {
-                    // Determinar qué campos usar (compatibilidad con formato antiguo y nuevo)
+                function renderConflictCard(conflict, index, esNoReal) {
                     const asig1 = conflict.CodAsignatura1 || conflict.asignatura1 || 'N/A';
                     const asig2 = conflict.CodAsignatura2 || conflict.asignatura2 || 'N/A';
                     const nombreAsig1 = conflict.Asignatura1 || conflict.nombreAsignatura1 || 'Sin nombre';
@@ -3554,11 +3844,34 @@
                     const bloques1 = conflict.Bloques1 || conflict.bloques1 || 'N/A';
                     const bloques2 = conflict.Bloques2 || conflict.bloques2 || 'N/A';
 
-                    html += `
-                        <div class="suggestion-card" style="border-color: #e74c3c; border-left: 5px solid #e74c3c;">
-                            <div class="suggestion-header" style="background-color: #fee; padding: 10px;">
-                                <span class="suggestion-title" style="color: #e74c3c; font-weight: bold;">
-                                    🚨 Conflicto #${index + 1} - Aula ${aula} - ${dia}
+                    // Get room type from loaded data
+                    const aulaInfo = currentData.aulas.find(a => a.codigo === aula);
+                    const tipoAula = aulaInfo ? aulaInfo.tipo : '—';
+
+                    const borderColor = esNoReal ? '#f0ad4e' : '#e74c3c';
+                    const bgColor = esNoReal ? '#fef9e7' : '#fee';
+                    const icon = esNoReal ? '⚠️' : '🚨';
+                    const label = esNoReal ? 'Prob. no real' : 'Conflicto';
+
+                    // Build inscritos ref info
+                    const inscRef1 = conflict.InscritosRef1;
+                    const inscRef2 = conflict.InscritosRef2;
+                    let refInfo1 = '';
+                    let refInfo2 = '';
+                    if (inscRef1 !== undefined) {
+                        const refStyle = inscRef1 === 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+                        refInfo1 = `<br><span style="${refStyle}">📋 Inscritos ref: <strong>${inscRef1}</strong></span>`;
+                    }
+                    if (inscRef2 !== undefined) {
+                        const refStyle = inscRef2 === 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+                        refInfo2 = `<br><span style="${refStyle}">📋 Inscritos ref: <strong>${inscRef2}</strong></span>`;
+                    }
+
+                    let cardHtml = `
+                        <div class="suggestion-card" style="border-color: ${borderColor}; border-left: 5px solid ${borderColor};">
+                            <div class="suggestion-header" style="background-color: ${bgColor}; padding: 10px;">
+                                <span class="suggestion-title" style="color: ${borderColor}; font-weight: bold;">
+                                    ${icon} ${label} #${index + 1} - Aula ${aula} (${tipoAula}) - ${dia}
                                 </span>
                             </div>
                             <div class="suggestion-details" style="padding: 15px;">
@@ -3583,10 +3896,10 @@
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px; border: 1px solid #dee2e6;">
-                                            📊 Inscritos: <strong>${insc1}</strong> / ${cupo1}
+                                            📊 Inscritos: <strong>${insc1}</strong> / ${cupo1}${refInfo1}
                                         </td>
                                         <td style="padding: 8px; border: 1px solid #dee2e6;">
-                                            📊 Inscritos: <strong>${insc2}</strong> / ${cupo2}
+                                            📊 Inscritos: <strong>${insc2}</strong> / ${cupo2}${refInfo2}
                                         </td>
                                     </tr>
                                     <tr>
@@ -3598,14 +3911,82 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                <div style="margin-top: 10px; padding: 10px; background: ${esNoReal ? '#fef9e7' : '#fff3cd'}; border-radius: 5px;">`;
+
+                    if (esNoReal) {
+                        const sinInsc = [];
+                        if (inscRef1 === 0) sinInsc.push(`${asig1}-${secc1}`);
+                        if (inscRef2 === 0) sinInsc.push(`${asig2}-${secc2}`);
+                        cardHtml += `
+                                    <strong>ℹ️ Probablemente no es un conflicto real:</strong> La sección <strong>${sinInsc.join(' y ')}</strong> tuvo 0 inscritos en el periodo de referencia.`;
+                    } else {
+                        cardHtml += `
                                     <strong>⚠️ Problema:</strong> Ambas secciones tienen aula asignada (<strong>${aula}</strong>),
-                                    tienen estudiantes inscritos, y sus horarios se solapan el día <strong>${dia}</strong>.
+                                    tienen estudiantes inscritos, y sus horarios se solapan el día <strong>${dia}</strong>.`;
+                    }
+
+                    cardHtml += `
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        </div>`;
+                    return cardHtml;
+                }
+
+                // Render real conflicts first
+                if (conflictosReales.length > 0) {
+                    html += `<h3 style="margin: 15px 0 10px 0; color: #e74c3c;">🚨 Conflictos reales (${conflictosReales.length})</h3>`;
+                    conflictosReales.forEach((conflict, index) => {
+                        html += renderConflictCard(conflict, index, false);
+                    });
+                }
+
+                // Render probably-not-real conflicts in a collapsible section
+                if (conflictosNoReales.length > 0) {
+                    html += `
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; padding: 10px; background: #fef9e7; border: 1px solid #f0ad4e; border-radius: 6px; font-weight: bold; color: #856404;">
+                                ⚠️ Conflictos probablemente no reales (${conflictosNoReales.length}) — secciones sin inscritos en periodo de referencia
+                            </summary>
+                            <div style="margin-top: 10px;">`;
+                    conflictosNoReales.forEach((conflict, index) => {
+                        html += renderConflictCard(conflict, index, true);
+                    });
+                    html += `
+                            </div>
+                        </details>`;
+                }
+
+                // Render capacity conflicts
+                if (capacityConflicts.length > 0) {
+                    html += `
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; padding: 10px; background: #fce4ec; border: 1px solid #e57373; border-radius: 6px; font-weight: bold; color: #c62828;">
+                                📊 Conflictos de capacidad (${capacityConflicts.length}) — secciones que exceden la capacidad del aula
+                            </summary>
+                            <div style="margin-top: 10px;">`;
+                    capacityConflicts.forEach((c, index) => {
+                        const capAulaInfo = currentData.aulas.find(a => a.codigo === c.Aula);
+                        const capTipoAula = capAulaInfo ? capAulaInfo.tipo : '—';
+                        html += `
+                            <div class="suggestion-card" style="border-color: #e57373; border-left: 5px solid #e57373;">
+                                <div class="suggestion-header" style="background-color: #fce4ec; padding: 10px;">
+                                    <span class="suggestion-title" style="color: #c62828; font-weight: bold;">
+                                        📊 Capacidad #${index + 1} - Aula ${c.Aula} (${capTipoAula}) - ${c.Dia}
+                                    </span>
+                                </div>
+                                <div class="suggestion-details" style="padding: 15px;">
+                                    <p><strong>${c.CodAsignatura1}-${c.Seccion1}</strong> — ${c.Asignatura1 || 'Sin nombre'}</p>
+                                    <p>Inscritos: <strong>${c.Inscritos}</strong> | Capacidad del aula: <strong>${c.Capacidad}</strong> | Tipo: <strong>${capTipoAula}</strong></p>
+                                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                        <strong>⚠️ Problema:</strong> La sección tiene <strong>${c.Inscritos}</strong> inscritos pero el aula <strong>${c.Aula}</strong> (${capTipoAula}) solo tiene capacidad para <strong>${c.Capacidad}</strong>.
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                    html += `
+                            </div>
+                        </details>`;
+                }
 
                 conflictsDiv.innerHTML = html;
             }
@@ -3658,6 +4039,284 @@
 
         // ==================== PLANNING MODE FUNCTIONS ====================
 
+        let comparacionData = null; // Cache for comparison data
+        let comparacionFiltroActual = 'todas';
+
+        const bloqueHoraInicio = {
+            1: '7:00', 2: '7:50', 3: '8:45', 4: '9:20',
+            5: '10:15', 6: '11:00', 7: '11:50', 8: '12:40',
+            9: '1:30', 10: '2:20', 11: '3:05', 12: '3:55',
+            13: '4:40', 14: '5:30', 15: '6:15', 16: '7:05',
+            17: '7:50', 18: '8:40', 19: '9:25'
+        };
+        const bloqueHoraFin = {
+            1: '7:45', 2: '8:30', 3: '9:20', 4: '10:05',
+            5: '11:00', 6: '11:45', 7: '12:40', 8: '1:30',
+            9: '2:20', 10: '3:05', 11: '3:50', 12: '4:40',
+            13: '5:25', 14: '6:15', 15: '7:00', 16: '7:50',
+            17: '8:35', 18: '9:25', 19: '10:10'
+        };
+
+        function bloquesAHoras(bloqueStr) {
+            // bloqueStr is like "1-4", "5-8", "1", etc.
+            const parts = bloqueStr.split('-');
+            const inicio = parseInt(parts[0]);
+            const fin = parseInt(parts[parts.length - 1]);
+            if (!bloqueHoraInicio[inicio] || !bloqueHoraFin[fin]) return bloqueStr;
+            return `${bloqueHoraInicio[inicio]}-${bloqueHoraFin[fin]}`;
+        }
+
+        function horarioConHoras(horarioStr) {
+            // horarioStr is like "5-8:A2-6" or "1-4" or "5-8:A2-6,9-12:A3-1"
+            if (!horarioStr || !horarioStr.trim()) return '';
+            return horarioStr.split(/[,;]/).map(part => {
+                const match = part.match(/^(\d+(?:-\d+)?)(:.+)?$/);
+                if (!match) return part;
+                const horas = bloquesAHoras(match[1]);
+                const aula = match[2] || '';
+                return horas + aula;
+            }).join(', ');
+        }
+
+        function formatHorarioResumen(data, changedDias) {
+            if (!data) return '—';
+            const diasCortos = ['', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
+            const parts = [];
+            for (let dia = 1; dia <= 7; dia++) {
+                const h = data[`horario${dia}`];
+                if (h && h.trim()) {
+                    const isChanged = changedDias && changedDias.has(dia);
+                    const style = isChanged ? 'color:#c00; font-weight:bold;' : 'color:#999;';
+                    parts.push(`<span style="${style}"><strong>${diasCortos[dia]}</strong>: ${horarioConHoras(h)}</span>`);
+                }
+            }
+            if (parts.length === 0) return '<span style="color:#999;">(sin horario)</span>';
+            return parts.join('<br>');
+        }
+
+        function generarComparacionPeriodos() {
+            // Use originalData (immutable snapshot from DB) to compare, not currentData (may be modified by cloning)
+            const ofertaActual = originalData ? originalData.oferta : currentData.oferta;
+            if (!referenciaData || !ofertaActual.length) return null;
+
+            const diasNombres = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const nuevas = [];
+            const eliminadas = [];
+            const modificadas = [];
+            const sinCambios = [];
+            const cerradas = [];
+
+            // Index reference sections by codigo+seccion
+            const refMap = new Map();
+            referenciaData.forEach(r => {
+                refMap.set(`${r.codigo}-${r.seccion}`, r);
+            });
+
+            // Index current sections by codigo+seccion
+            const currentMap = new Map();
+            ofertaActual.forEach(s => {
+                currentMap.set(`${s.codigo}-${s.seccion}`, s);
+            });
+
+            // Check current sections against reference
+            ofertaActual.forEach(section => {
+                const key = `${section.codigo}-${section.seccion}`;
+                const ref = refMap.get(key);
+
+                if (!ref) {
+                    nuevas.push({ section, ref: null });
+                    return;
+                }
+
+                // Cerrada por cupo: cupo es 0 o null en el periodo actual
+                if (!section.cupo || section.cupo <= 0) {
+                    cerradas.push({ section, ref });
+                    return;
+                }
+
+                // Compare schedules
+                const cambios = [];
+                for (let dia = 1; dia <= 7; dia++) {
+                    const hActual = section[`horario${dia}`] || '';
+                    const hRef = ref[`horario${dia}`] || '';
+                    if (hActual !== hRef) {
+                        cambios.push({
+                            dia: diasNombres[dia],
+                            horarioActual: hActual || '(sin horario)',
+                            horarioRef: hRef || '(sin horario)'
+                        });
+                    }
+                }
+
+                // Compare cupo
+                const cupoCambio = section.cupo !== ref.cupo;
+
+                if (cambios.length > 0 || cupoCambio) {
+                    modificadas.push({ section, ref, cambiosHorario: cambios, cupoCambio });
+                } else {
+                    sinCambios.push({ section, ref });
+                }
+            });
+
+            // Check reference sections not in current (eliminated)
+            referenciaData.forEach(ref => {
+                const key = `${ref.codigo}-${ref.seccion}`;
+                if (!currentMap.has(key)) {
+                    eliminadas.push({ section: null, ref });
+                }
+            });
+
+            return { nuevas, eliminadas, modificadas, sinCambios, cerradas };
+        }
+
+        function renderComparacionPeriodos() {
+            comparacionData = generarComparacionPeriodos();
+            if (!comparacionData) return;
+            filtrarComparacion(comparacionFiltroActual);
+        }
+
+        function filtrarComparacion(filtro) {
+            comparacionFiltroActual = filtro;
+            if (!comparacionData) return;
+
+            const { nuevas, eliminadas, modificadas, sinCambios, cerradas } = comparacionData;
+            const statsDiv = document.getElementById('comparacionStats');
+            const resultDiv = document.getElementById('comparacionResultado');
+
+            const periodoActual = originalData.periodo;
+            const periodoRef = originalData.periodoReferencia;
+
+            // Stats
+            statsDiv.innerHTML = `
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width:120px; padding:15px; background:#d4edda; border-radius:6px; text-align:center; cursor:pointer; ${filtro === 'nuevas' ? 'outline:3px solid #28a745;' : ''}" onclick="filtrarComparacion('nuevas')">
+                        <div style="font-size:24px; font-weight:bold;">${nuevas.length}</div>
+                        <div>Secciones nuevas</div>
+                    </div>
+                    <div style="flex:1; min-width:120px; padding:15px; background:#f8d7da; border-radius:6px; text-align:center; cursor:pointer; ${filtro === 'eliminadas' ? 'outline:3px solid #dc3545;' : ''}" onclick="filtrarComparacion('eliminadas')">
+                        <div style="font-size:24px; font-weight:bold;">${eliminadas.length}</div>
+                        <div>Secciones eliminadas</div>
+                    </div>
+                    <div style="flex:1; min-width:120px; padding:15px; background:#e2d5f1; border-radius:6px; text-align:center; cursor:pointer; ${filtro === 'cerradas' ? 'outline:3px solid #6f42c1;' : ''}" onclick="filtrarComparacion('cerradas')">
+                        <div style="font-size:24px; font-weight:bold;">${cerradas.length}</div>
+                        <div>Cerradas por cupo</div>
+                    </div>
+                    <div style="flex:1; min-width:120px; padding:15px; background:#fff3cd; border-radius:6px; text-align:center; cursor:pointer; ${filtro === 'modificadas' ? 'outline:3px solid #ffc107;' : ''}" onclick="filtrarComparacion('modificadas')">
+                        <div style="font-size:24px; font-weight:bold;">${modificadas.length}</div>
+                        <div>Secciones modificadas</div>
+                    </div>
+                    <div style="flex:1; min-width:120px; padding:15px; background:#d1ecf1; border-radius:6px; text-align:center; cursor:pointer; ${filtro === 'sinCambios' ? 'outline:3px solid #17a2b8;' : ''}" onclick="filtrarComparacion('sinCambios')">
+                        <div style="font-size:24px; font-weight:bold;">${sinCambios.length}</div>
+                        <div>Sin cambios</div>
+                    </div>
+                </div>
+                <p style="margin-top:10px; color:#666;">Comparando periodo <strong>${periodoActual}</strong> (actual) vs <strong>${periodoRef}</strong> (referencia)</p>
+            `;
+
+            // Define groups in display order
+            const grupos = [
+                { key: 'nuevas', label: 'Nuevas', items: nuevas, color: '#28a745', bg: '#d4edda' },
+                { key: 'modificadas', label: 'Modificadas', items: modificadas, color: '#856404', bg: '#fff3cd' },
+                { key: 'eliminadas', label: 'Eliminadas', items: eliminadas, color: '#dc3545', bg: '#f8d7da' },
+                { key: 'cerradas', label: 'Cerradas por cupo', items: cerradas, color: '#6f42c1', bg: '#e2d5f1' },
+                { key: 'sinCambios', label: 'Sin cambios', items: sinCambios, color: '#17a2b8', bg: '#d1ecf1' }
+            ];
+
+            // Filter to selected group or all
+            const gruposVisibles = filtro === 'todas'
+                ? grupos.filter(g => g.items.length > 0)
+                : grupos.filter(g => g.key === filtro && g.items.length > 0);
+
+            if (gruposVisibles.length === 0) {
+                resultDiv.innerHTML = '<div class="info-box"><p>No hay secciones en esta categoría.</p></div>';
+                return;
+            }
+
+            let html = '';
+
+            gruposVisibles.forEach(grupo => {
+                const isOpen = filtro !== 'todas' || grupo.key === 'nuevas' || grupo.key === 'modificadas';
+                html += `
+                <details ${isOpen ? 'open' : ''} style="margin-bottom:15px;">
+                    <summary style="cursor:pointer; padding:12px 15px; background:${grupo.bg}; border-radius:6px; font-weight:bold; font-size:1.05em; border-left:4px solid ${grupo.color};">
+                        <span style="color:${grupo.color};">${grupo.label}</span> (${grupo.items.length})
+                    </summary>
+                    <div style="margin-top:5px;">
+                        ${renderComparacionTabla(grupo.items, periodoRef, periodoActual)}
+                    </div>
+                </details>`;
+            });
+
+            resultDiv.innerHTML = html;
+        }
+
+        function renderComparacionTabla(items, periodoRef, periodoActual) {
+            let html = `<div class="table-responsive"><table class="data-table" style="width:100%; border-collapse:collapse;">
+                <thead><tr>
+                    <th style="padding:8px; border:1px solid #ddd;">Código</th>
+                    <th style="padding:8px; border:1px solid #ddd;">Nombre</th>
+                    <th style="padding:8px; border:1px solid #ddd;">Secc</th>
+                    <th style="padding:8px; border:1px solid #ddd;">Cupo</th>
+                    <th style="padding:8px; border:1px solid #ddd;">Referencia (${periodoRef})<br><small>Horario / Inscritos</small></th>
+                    <th style="padding:8px; border:1px solid #ddd;">Actual (${periodoActual})<br><small>Horario</small></th>
+                </tr></thead><tbody>`;
+
+            items.forEach(item => {
+                const section = item.section;
+                const ref = item.ref;
+                let codigo, nombre, seccion, cupo, colRef, colActual;
+
+                if (!ref && section) {
+                    codigo = section.codigo;
+                    nombre = section.nombre || '';
+                    seccion = section.seccion;
+                    cupo = section.cupo || 0;
+                    colRef = '<span style="color:#999;">No existía</span>';
+                    colActual = formatHorarioResumen(section);
+                } else if (!section && ref) {
+                    codigo = ref.codigo;
+                    nombre = '';
+                    seccion = ref.seccion;
+                    cupo = ref.cupo || 0;
+                    colRef = `${formatHorarioResumen(ref)}<br><small>Insc: ${ref.inscritos || 0}</small>`;
+                    colActual = '<span style="color:#999;">No existe</span>';
+                } else if (section && ref && (!section.cupo || section.cupo <= 0)) {
+                    codigo = section.codigo;
+                    nombre = section.nombre || '';
+                    seccion = section.seccion;
+                    cupo = `${ref.cupo || 0} → 0`;
+                    colRef = `${formatHorarioResumen(ref)}<br><small>Insc: ${ref.inscritos || 0}</small>`;
+                    colActual = '<span style="color:#999;">Cupo cerrado</span>';
+                } else if (item.cambiosHorario !== undefined) {
+                    codigo = section.codigo;
+                    nombre = section.nombre || '';
+                    seccion = section.seccion;
+                    cupo = item.cupoCambio ? `${ref.cupo} → ${section.cupo}` : (section.cupo || 0);
+                    colRef = `${formatHorarioResumen(ref)}<br><small>Insc: ${ref.inscritos || 0}</small>`;
+                    colActual = formatHorarioResumen(section);
+                } else {
+                    codigo = section.codigo;
+                    nombre = section.nombre || '';
+                    seccion = section.seccion;
+                    cupo = section.cupo || 0;
+                    colRef = `${formatHorarioResumen(ref)}<br><small>Insc: ${ref.inscritos || 0}</small>`;
+                    colActual = formatHorarioResumen(section);
+                }
+
+                html += `<tr>
+                    <td style="padding:8px; border:1px solid #ddd;"><strong>${codigo}</strong></td>
+                    <td style="padding:8px; border:1px solid #ddd;">${nombre}</td>
+                    <td style="padding:8px; border:1px solid #ddd; text-align:center;">${seccion}</td>
+                    <td style="padding:8px; border:1px solid #ddd; text-align:center;">${cupo}</td>
+                    <td style="padding:8px; border:1px solid #ddd; font-size:0.85em;">${colRef}</td>
+                    <td style="padding:8px; border:1px solid #ddd; font-size:0.85em;">${colActual}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
         function updatePlanningModeUI() {
             const banner = document.getElementById('planningBanner');
             const bannerText = document.getElementById('planningBannerText');
@@ -3678,11 +4337,31 @@
 
                 notReady.style.display = 'none';
                 content.style.display = 'block';
+
+                // Show/hide comparar periodos tab
+                const compararTab = document.getElementById('compararPeriodosTab');
+                if (compararTab) {
+                    compararTab.style.display = referenciaData ? '' : 'none';
+                }
+                const comparacionNotReady = document.getElementById('comparacionNotReady');
+                const comparacionContent = document.getElementById('comparacionContent');
+                if (referenciaData) {
+                    comparacionNotReady.style.display = 'none';
+                    comparacionContent.style.display = 'block';
+                    renderComparacionPeriodos();
+                } else {
+                    comparacionNotReady.style.display = 'block';
+                    comparacionContent.style.display = 'none';
+                }
+
                 renderPlanningReport();
             } else {
                 banner.style.display = 'none';
                 notReady.style.display = 'block';
                 content.style.display = 'none';
+
+                const compararTab = document.getElementById('compararPeriodosTab');
+                if (compararTab) compararTab.style.display = 'none';
             }
         }
 
@@ -3700,7 +4379,9 @@
 
                 for (let dia = 1; dia <= 7; dia++) {
                     const field = `horario${dia}`;
-                    if (current[field] !== original[field]) {
+                    const currVal = current[field] || '';
+                    const origVal = original[field] || '';
+                    if (currVal !== origVal) {
                         diffs.push({
                             codigo: current.codigo,
                             nombre: current.nombre,
@@ -3757,6 +4438,23 @@
                 return;
             }
 
+            // Group diffs by section to show complete before/after
+            const diffsBySection = new Map();
+            diffs.forEach((diff, idx) => {
+                const key = `${diff.codigo}-${diff.seccion}`;
+                if (!diffsBySection.has(key)) {
+                    diffsBySection.set(key, {
+                        codigo: diff.codigo,
+                        nombre: diff.nombre,
+                        seccion: diff.seccion,
+                        diffs: [],
+                        indices: []
+                    });
+                }
+                diffsBySection.get(key).diffs.push(diff);
+                diffsBySection.get(key).indices.push(idx);
+            });
+
             let html = `
                 <h3 style="margin-top:20px;">Detalle de Cambios</h3>
                 <div class="table-responsive">
@@ -3766,35 +4464,38 @@
                                 <th style="padding:10px;">Código</th>
                                 <th style="padding:10px;">Asignatura</th>
                                 <th style="padding:10px;">Sección</th>
-                                <th style="padding:10px;">Día</th>
-                                <th style="padding:10px;">Horario Original</th>
-                                <th style="padding:10px;">Horario Nuevo</th>
+                                <th style="padding:10px;">Antes de planificar<br><small>(periodo ${originalData.periodo})</small></th>
+                                <th style="padding:10px;">Después de planificar<br><small>(cambios aplicados)</small></th>
                                 <th style="padding:10px;">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
 
-            diffs.forEach((diff, idx) => {
-                // Parse original and modified to show aula changes clearly
-                const origSlots = diff.original ? parseSchedule(diff.original) : [];
-                const newSlots = diff.modified ? parseSchedule(diff.modified) : [];
+            diffsBySection.forEach((group) => {
+                const original = originalData.oferta.find(
+                    o => o.codigo === group.codigo && o.seccion === group.seccion
+                );
+                const current = currentData.oferta.find(
+                    c => c.codigo === group.codigo && c.seccion === group.seccion
+                );
 
-                const origDisplay = origSlots.map(s => `Bloques ${s.blocks}: <strong>${s.aula}</strong>`).join('<br>') || '<em>Sin asignar</em>';
-                const newDisplay = newSlots.map(s => `Bloques ${s.blocks}: <strong>${s.aula}</strong>`).join('<br>') || '<em>Sin asignar</em>';
+                // Collect which days changed
+                const changedDias = new Set(group.diffs.map(d => d.dia));
 
-                const bgColor = !diff.original ? '#d4edda' : !diff.modified ? '#f8d7da' : '#fff3cd';
+                const origDisplay = original ? formatHorarioResumen(original, changedDias) : '<em>Sin horario</em>';
+                const newDisplay = current ? formatHorarioResumen(current, changedDias) : '<em>Sin horario</em>';
+                const indices = group.indices;
 
                 html += `
-                    <tr style="background:${bgColor};">
-                        <td style="padding:8px; border:1px solid #ddd;"><strong>${diff.codigo}</strong></td>
-                        <td style="padding:8px; border:1px solid #ddd;">${diff.nombre || ''}</td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${diff.seccion}</td>
-                        <td style="padding:8px; border:1px solid #ddd;">${diff.diaNombre}</td>
-                        <td style="padding:8px; border:1px solid #ddd;">${origDisplay}</td>
-                        <td style="padding:8px; border:1px solid #ddd;">${newDisplay}</td>
+                    <tr style="background:#fff3cd;">
+                        <td style="padding:8px; border:1px solid #ddd;"><strong>${group.codigo}</strong></td>
+                        <td style="padding:8px; border:1px solid #ddd;">${group.nombre || ''}</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${group.seccion}</td>
+                        <td style="padding:8px; border:1px solid #ddd; font-size:0.85em;">${origDisplay}</td>
+                        <td style="padding:8px; border:1px solid #ddd; font-size:0.85em;">${newDisplay}</td>
                         <td style="padding:8px; border:1px solid #ddd; text-align:center;">
-                            <button class="btn btn-warning" onclick="revertChange(${idx})" style="padding:4px 10px; font-size:12px;">Revertir</button>
+                            <button class="btn btn-warning" onclick="revertChanges([${indices.join(',')}])" style="padding:4px 10px; font-size:12px;">Revertir</button>
                         </td>
                     </tr>
                 `;
@@ -3821,28 +4522,40 @@
             diffDiv.innerHTML = html;
         }
 
-        function revertChange(diffIndex) {
+        async function revertChange(diffIndex) {
+            await revertChanges([diffIndex]);
+        }
+
+        async function revertChanges(diffIndices) {
             const diffs = generateDiff();
-            if (diffIndex >= diffs.length) return;
+            let reverted = 0;
 
-            const diff = diffs[diffIndex];
-            const section = currentData.oferta.find(
-                s => s.codigo === diff.codigo && s.seccion === diff.seccion
-            );
-            if (!section) return;
+            // Process in reverse order to keep indices stable
+            diffIndices.sort((a, b) => b - a).forEach(diffIndex => {
+                if (diffIndex >= diffs.length) return;
 
-            // Restore original value
-            section[diff.field] = diff.original;
+                const diff = diffs[diffIndex];
+                const section = currentData.oferta.find(
+                    s => s.codigo === diff.codigo && s.seccion === diff.seccion
+                );
+                if (!section) return;
 
-            // Remove related pending changes
-            currentData.pendingChanges = currentData.pendingChanges.filter(
-                c => !(c.codAsignatura === diff.codigo && c.seccion === diff.seccion && c.localField === diff.field)
-            );
+                // Restore original value
+                section[diff.field] = diff.original;
 
-            detectLocalConflicts();
+                // Remove related pending changes
+                currentData.pendingChanges = currentData.pendingChanges.filter(
+                    c => !(c.codAsignatura === diff.codigo && c.seccion === diff.seccion && c.localField === diff.field)
+                );
+                reverted++;
+            });
+
+            await detectLocalConflicts();
             updatePendingChanges();
             updatePlanningModeUI();
-            showMessage('success', `Cambio revertido: ${diff.codigo}-${diff.seccion} ${diff.diaNombre}`);
+            if (reverted > 0) {
+                showMessage('success', `${reverted} cambio(s) revertido(s)`);
+            }
         }
 
         // ==================== SQL GENERATION ====================
@@ -3894,23 +4607,58 @@
             return sql;
         }
 
-        function exportPlanningSQL() {
-            const sql = generateSQLCommands();
-            if (sql === '-- No hay cambios\n') {
+        function exportPlanningChecklist() {
+            const diffs = generateDiff();
+            if (diffs.length === 0) {
                 showMessage('error', 'No hay cambios para exportar');
                 return;
             }
 
             const periodo = document.getElementById('periodo').value;
-            const dataUri = 'data:text/sql;charset=utf-8,' + encodeURIComponent(sql);
-            const fileName = `planificacion_aulas_${periodo}_${new Date().toISOString().slice(0,10)}.sql`;
+            const periodoRef = document.getElementById('periodoReferencia').value;
+
+            let txt = `CHECKLIST DE CAMBIOS DE AULAS\n`;
+            txt += `========================================\n`;
+            txt += `Periodo: ${periodo}\n`;
+            if (periodoRef) txt += `Periodo de referencia: ${periodoRef}\n`;
+            txt += `Fecha: ${new Date().toLocaleDateString('es-VE')}\n`;
+            txt += `Total de cambios: ${diffs.length}\n`;
+            txt += `========================================\n\n`;
+
+            // Agrupar por sección
+            const porSeccion = {};
+            diffs.forEach(d => {
+                const key = `${d.codigo}-${d.seccion}`;
+                if (!porSeccion[key]) {
+                    porSeccion[key] = { codigo: d.codigo, nombre: d.nombre, seccion: d.seccion, cambios: [] };
+                }
+                porSeccion[key].cambios.push(d);
+            });
+
+            let num = 1;
+            Object.values(porSeccion).forEach(sec => {
+                txt += `── ${sec.codigo} - ${sec.nombre} (Sección ${sec.seccion}) ──\n`;
+                sec.cambios.forEach(d => {
+                    const antes = d.original || '(sin aula)';
+                    const despues = d.modified || '(sin aula)';
+                    txt += `  [ ] ${num}. ${d.diaNombre} → cambiar de "${antes}" a "${despues}"\n`;
+                    num++;
+                });
+                txt += `\n`;
+            });
+
+            txt += `========================================\n`;
+            txt += `Verificar ${diffs.length} cambios en total.\n`;
+
+            const dataUri = 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
+            const fileName = `checklist_aulas_${periodo}_${new Date().toISOString().slice(0,10)}.txt`;
 
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', fileName);
             linkElement.click();
 
-            showMessage('success', 'Archivo SQL generado');
+            showMessage('success', 'Checklist generado');
         }
 
         function exportPlanningJSON() {
@@ -3991,7 +4739,7 @@
 
                 fetch(aulasUrl)
                     .then(r => r.json())
-                    .then(aulasData => {
+                    .then(async (aulasData) => {
                         currentData.aulas = aulasData.map(item => ({
                             codigo: item.CodAula,
                             nombre: item.NombreAula,
@@ -4012,7 +4760,7 @@
                         }
 
                         populateAulaSelector();
-                        detectLocalConflicts();
+                        await detectLocalConflicts();
                         updatePlanningModeUI();
                         updatePendingChanges();
                         showMessage('success', `Sesión restaurada: ${currentData.oferta.length} secciones, ${currentData.pendingChanges.length} cambios pendientes`);
@@ -4029,7 +4777,7 @@
             }
         }
 
-        function resetPlanning() {
+        async function resetPlanning() {
             if (!originalData) {
                 showMessage('error', 'No hay sesión de planificación activa');
                 return;
@@ -4041,8 +4789,9 @@
 
             currentData.oferta = JSON.parse(JSON.stringify(originalData.oferta));
             currentData.pendingChanges = [];
-            detectLocalConflicts();
+            await detectLocalConflicts();
             updatePendingChanges();
+
             updatePlanningModeUI();
             populateAulaSelector();
             showMessage('success', 'Planificación reiniciada al estado original');

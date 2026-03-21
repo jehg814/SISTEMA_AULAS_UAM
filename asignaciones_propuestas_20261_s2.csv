@@ -1,0 +1,59 @@
+CodAsignatura,NombreAsignatura,Seccion,Dia,Bloques,AulaAsignada,NombreAula,CapacidadAula,TipoAula,Inscritos,UsaCAS
+EPS511,"Evaluación psicológica del niño y del adolescente",2M-V,Martes,1-4,2-5,"Piso 2 Aula 5",48,SALON,47,false
+EPS515,"Técnicas Psicométricas I",2M-V,Martes,5-7,PB-2,"Planta Baja Aula 2",48,SALON,47,false
+EPS101,"Procesos Psicológicos Básicos I",1M-V,Jueves,1-4,CAS-5,"Aula 5 Casona",25,SALON,18,true
+EPS112,"Habilidades para la vida",1M-V,Miércoles,1-4,CAS-5,"Aula 5 Casona",25,SALON,18,true
+HLI109,"Competencias Comunicativas del Inglés I",1M-V,Miércoles,1-3,CAS-1,"Aula 1 Casona",30,SALON,18,true
+HLI109,"Competencias Comunicativas del Inglés I",1M-V,Jueves,5-7,CAS-5,"Aula 5 Casona",25,SALON,18,true
+SLF501,"Fisioterapia Ortopédica",1M-V,Martes,1-3,1-5,"Piso 1 Aula 5",24,SALON,18,false
+SLF508,"Métodos de Evaluación II",1M-V,Lunes,1-5,2-1,"Salón con Camillas",45,SALON_CAMILLAS,18,false
+SLF509,"Métodos de Aplicación I",1M-V,Miércoles,1-5,2-1,"Salón con Camillas",45,SALON_CAMILLAS,18,false
+SLF511,"Clínica II",1M-V,Jueves,5-6,3-1,"Piso 3 Aula 1",25,SALON,18,false
+EPS105,"Antropología",1M-V,Martes,1-4,CAS-5,"Aula 5 Casona",25,SALON,17,true
+EPS111,"Filosofía de la Ciencia",1M-V,Lunes,1-4,CAS-5,"Aula 5 Casona",25,SALON,17,true
+EPS113,"Redacción y narrativa escrita",1M-V,Viernes,1-4,CAS-5,"Aula 5 Casona",25,SALON,17,true
+SLF510,"Ética Profesional",1M-V,Viernes,1-3,3-1,"Piso 3 Aula 1",25,SALON,17,false
+HLI106,"Civilización Anglosajona",1M-V,Miércoles,4-6,CAS-1,"Aula 1 Casona",30,SALON,15,true
+HLI108,"Historia de las lenguas galorrománicas",1M-V,Jueves,2-4,CAS-1,"Aula 1 Casona",30,SALON,15,true
+EPS409,"Psicopatología I",1M-V,Miércoles,1-4,3-2,"Piso 3 Aula 2",25,SALON,14,false
+HLI107,"Introducción al Segundo Idioma",1M-V,Lunes,3-4,CAS-1,"Aula 1 Casona",30,SALON,14,true
+HLI107,"Introducción al Segundo Idioma",1M-V,Martes,5-6,CAS-5,"Aula 5 Casona",25,SALON,14,true
+HLI110,"Gramática Española",1M-V,Lunes,1-2,CAS-1,"Aula 1 Casona",30,SALON,14,true
+HLI110,"Gramática Española",1M-V,Martes,3-4,CAS-1,"Aula 1 Casona",30,SALON,14,true
+EPS412,"Psicología Hospitalaria y de la Emergencia",1M-V,Jueves,5-8,3-2,"Piso 3 Aula 2",25,SALON,13,false
+EPS513,"Análisis funcional de la Conducta",2M-V,Lunes,4-6,1-5,"Piso 1 Aula 5",24,SALON,13,false
+HLI310,"Análisis del Discurso",1M-V,Miércoles,6-8,3-1,"Piso 3 Aula 1",25,SALON,13,false
+ECP206,"Análisis Matemático II",1T-V,Martes,12-13,1-5,"Piso 1 Aula 5",24,SALON,12,false
+ECP206,"Análisis Matemático II",1T-V,Jueves,8-10,3-1,"Piso 3 Aula 1",25,SALON,12,false
+EPS309,"Estadística Aplicada a la Psicología",1M-V,Lunes,8-11,1-5,"Piso 1 Aula 5",24,SALON,12,false
+EPS315,"Psicología de la Personalidad",1M-V,Viernes,1-4,3-2,"Piso 3 Aula 2",25,SALON,12,false
+EPS317,"Psicología de la Salud",1M-V,Viernes,5-7,1-5,"Piso 1 Aula 5",24,SALON,12,false
+HLI307,"Inglés II",1M-V,Martes,4-7,3-3,"Piso 3 Aula 3",25,SALON,12,false
+HLI308,"Fonética II",1M-V,Lunes,4-6,3-3,"Piso 3 Aula 3",25,SALON,12,false
+HLI308,"Fonética II",1M-V,Miércoles,1-2,1-5,"Piso 1 Aula 5",24,SALON,12,false
+HLI309,"Competencias Comunicativas del Inglés III",1M-V,Martes,1-3,3-2,"Piso 3 Aula 2",25,SALON,12,false
+HLI309,"Competencias Comunicativas del Inglés III",1M-V,Viernes,1-3,3-3,"Piso 3 Aula 3",25,SALON,12,false
+HLI311,"Lectura I",1M-V,Lunes,1-3,1-5,"Piso 1 Aula 5",24,SALON,12,false
+HLI312,"Literatura Inglesa",1M-V,Miércoles,3-5,3-1,"Piso 3 Aula 1",25,SALON,12,false
+DED2001,"Introducción al Derecho II",1T-V,Miércoles,10-12,1-5,"Piso 1 Aula 5",24,SALON,11,false
+DED2003,"Derecho Civil II (Personas)",1T-V,Martes,10-12,3-1,"Piso 3 Aula 1",25,SALON,11,false
+DED2005,"Economía Política",1T-V,Viernes,9-11,1-5,"Piso 1 Aula 5",24,SALON,11,false
+DED2006,"Derecho Constitucional I",1T-V,Jueves,10-12,1-5,"Piso 1 Aula 5",24,SALON,11,false
+ECP201,"Contabilidad I",1T-V,Lunes,8-10,3-3,"Piso 3 Aula 3",25,SALON,11,false
+ECP201,"Contabilidad I",1T-V,Jueves,11-13,3-1,"Piso 3 Aula 1",25,SALON,11,false
+ECP207,"Informática Aplicada",1T-V,Martes,8-11,1-4,"Laboratorio Computación",31,COMPUTACION,11,false
+ECP208,"Lógica",1T-V,Lunes,11-12,3-1,"Piso 3 Aula 1",25,SALON,11,false
+ECP208,"Lógica",1T-V,Miércoles,8-9,3-2,"Piso 3 Aula 2",25,SALON,11,false
+ECP209,"Metodología de la Investigación",1T-V,Miércoles,10-12,3-1,"Piso 3 Aula 1",25,SALON,11,false
+ECP210,"Macroeconomía",1T-V,Viernes,9-12,3-1,"Piso 3 Aula 1",25,SALON,11,false
+EPS314,"Psicología Evolutiva II",1M-V,Jueves,5-8,3-3,"Piso 3 Aula 3",25,SALON,11,false
+EPS514,"Psicopatología II",2M-V,Lunes,7-10,3-4,"Piso 3 Aula 4",25,SALON,10,false
+EPS510,"Principios de la Psicodinámica",2M-V,Jueves,1-4,3-6,"Piso 3 Aula 6",10,SALON,8,false
+EPS512,"Psicofarmacología",2M-V,Viernes,5-7,3-6,"Piso 3 Aula 6",10,SALON,7,false
+DED5001,"Derecho Civil V (Obligaciones)",1T-V,Martes,9-11,1-5,"Piso 1 Aula 5",24,SALON,6,false
+DED5002,"Derecho Penal II (Especial)",1T-V,Martes,12-14,3-6,"Piso 3 Aula 6",10,SALON,6,false
+DED5004,"Derecho Administrativo III (Procedimientos)",1T-V,Jueves,9-11,3-2,"Piso 3 Aula 2",25,SALON,6,false
+DED5005,"Derecho del Trabajo I (Derec.Individual)",1T-V,Lunes,9-11,3-6,"Piso 3 Aula 6",10,SALON,6,false
+DED5003,"Derecho Procesal Civil III (Juicio Ordinario)",1T-V,Viernes,9-11,3-2,"Piso 3 Aula 2",25,SALON,5,false
+DED5006,"Filosofía del Derecho",1T-V,Miércoles,9-11,3-6,"Piso 3 Aula 6",10,SALON,1,false
+EAC508,"Gestión del Talento Humano",1T-V,Martes,8-11,3-3,"Piso 3 Aula 3",25,SALON,1,false
